@@ -2,7 +2,7 @@
   <div class="shell">
     <header>
       <a class="brand" href="./">
-        <span class="brand-icon">縺</span>
+        <img class="brand-icon" src="../icon.png" alt="" width="37" height="37" />
         文字化けアシスト
       </a>
       <div class="toolbar">

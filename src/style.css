@@ -42,14 +42,11 @@ header {
   }
 }
 .brand-icon {
-  display: grid;
-  place-items: center;
-  background: #167b70;
-  color: white;
+  display: block;
+  flex-shrink: 0;
   width: 37px;
   height: 37px;
-  border-radius: 10px;
-  font-size: 21px;
+  object-fit: contain;
 }
 .toolbar {
   display: flex;

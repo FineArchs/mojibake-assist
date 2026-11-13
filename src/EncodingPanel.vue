@@ -43,9 +43,8 @@
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watchEffect } from "vue";
-import { selectedByteCount, type ViewType } from "./codec";
+import { selectedByteCount, type Range, type ViewType } from "./codec";
 
-type Range = [number, number];
 const props = defineProps<{
   kind: ViewType;
   title: string;

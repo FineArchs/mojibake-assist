@@ -5,14 +5,15 @@
         <span class="brand-icon">縺</span>
         文字化けアシスト
       </a>
-    </header>
-    <main>
-      <div class="toolbar">
+      <span class="toolbar">
         <div class="actions">
-          <button @click="sample">サンプルを試す <span>↗</span></button
+          <button @click="sample">サンプルを試す <span>↓</span></button
           ><button @click="clear">クリア</button>
         </div>
-      </div>
+      </span>
+    </header>
+    <div class="divider"></div>
+    <main>
       <section class="workspace">
         <EncodingPanel
           v-for="p in panels"
@@ -20,7 +21,6 @@
           :kind="p.id"
           :title="p.title"
           :subtitle="p.subtitle"
-          :number="p.number"
           :value="
             p.id === 'hex' && pendingHex !== null
               ? pendingHex
@@ -43,29 +43,17 @@
         {{ error }} 他のビューは最後に確定したバイト列を表示しています。
       </div>
       <div class="status" aria-live="polite">
-        <span><i></i> {{ bytes.length }} bytes</span
-        ><span
-          >選択範囲 <b>{{ selected[0] }} — {{ selected[1] }}</b>
+        <span
+          ><b>{{ selected[0] }} — {{ selected[1] }}</b>
           <span class="muted"
             >（{{ selected[1] - selected[0] }} bytes）</span
-          ></span
+          >選択中</span
         >
       </div>
-      <aside>
-        <span class="info">i</span>
-        <div>
-          <strong>使い方</strong>
-          <p>
-            どの欄からでも入力できます。文字を選択すると、対応するバイト範囲が他の欄でも選択されます。
-          </p>
-          <p>
-            Shift-JISにない文字は「?」に変換されます。不正なバイトは「�」などで表示されますが、編集するまでは元のバイトを保持します。文字の途中のバイト選択は、文字境界に丸めて表示します。
-          </p>
-        </div>
-      </aside>
     </main>
+    <div class="divider"></div>
     <footer>
-      <span>MOJIBAKE LAB</span><span>データはサーバーに送信されません。</span>
+      <span>Mojibake Assist</span>
     </footer>
   </div>
 </template>
@@ -81,16 +69,15 @@ const error = ref("");
 const pendingHex = ref<string | null>(null);
 const selectionSource = ref<View | null>(null);
 
-const panels: { id: View; title: string; subtitle: string; number: string }[] =
+const panels: { id: View; title: string; subtitle: string; }[] =
   [
     {
       id: "sjis",
       title: "Shift-JIS",
-      subtitle: "シフトJISとして解釈",
-      number: "01",
+      subtitle: "文字化けしたテキスト",
     },
-    { id: "hex", title: "Binary", subtitle: "バイト列 · 16進数", number: "02" },
-    { id: "utf8", title: "UTF-8", subtitle: "UTF-8として解釈", number: "03" },
+    { id: "hex", title: "Binary", subtitle: "バイト列 · 16進数" },
+    { id: "utf8", title: "UTF-8", subtitle: "復元後のテキスト" },
   ];
 
 const views = computed(() => ({

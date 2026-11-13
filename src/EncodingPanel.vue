@@ -2,10 +2,8 @@
   <article :class="['panel', kind]">
     <div class="panel-head">
       <div class="panel-title">
-        <span class="number">{{ number }}</span>
         <h2>{{ title }}</h2>
       </div>
-      <span class="tag">{{ kind === "hex" ? "HEX" : "TEXT" }}</span>
     </div>
     <p class="subtitle">{{ subtitle }}</p>
     <div class="editor">
@@ -52,7 +50,6 @@ const props = defineProps<{
   kind: View;
   title: string;
   subtitle: string;
-  number: string;
   value: string;
   countLabel: string;
   selection: Range;

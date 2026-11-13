@@ -95,28 +95,19 @@ function clear() {
 <template>
   <div class="shell">
     <header>
-      <a class="brand" href="./"
-        ><span class="brand-icon">文</span> Mojibake<span class="lab"
-          >LAB</span
-        ></a
-      ><span class="local"><i></i> ブラウザ内で処理</span>
+      <a class="brand" href="./">
+        <span class="brand-icon">縺</span>
+        文字化けアシスト
+      </a>
     </header>
     <main>
-      <div class="intro">
-        <p class="eyebrow">ENCODING WORKSPACE</p>
-        <h1>文字化けを、<span>読み解く。</span></h1>
-        <p class="description">
-          ひとつのバイト列を、3つの視点から。入力も選択範囲も、リアルタイムに同期します。
-        </p>
-      </div>
       <div class="toolbar">
-        <div class="connected"><span>↔</span> 3つのビューが同期中</div>
         <div class="actions">
           <button @click="sample">サンプルを試す <span>↗</span></button
           ><button @click="clear">クリア</button>
         </div>
       </div>
-      <section class="workspace" aria-label="文字コード変換ワークスペース">
+      <section class="workspace">
         <article v-for="p in panels" :key="p.id" :class="['panel', p.id]">
           <div class="panel-head">
             <div class="panel-title">
@@ -181,8 +172,7 @@ function clear() {
               p.id === "hex"
                 ? `${bytes.length} bytes`
                 : `${views[p.id].text.length} UTF-16 units`
-            }}</span
-            ><span>{{ p.id === "hex" ? "00 — FF" : "編集可能" }}</span>
+            }}</span><span>{{ p.id === "hex" ? "00 — FF" : "編集可能" }}</span>
           </div>
         </article>
       </section>

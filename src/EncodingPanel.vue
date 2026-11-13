@@ -17,9 +17,7 @@
         ref="textarea"
         :value="value"
         :aria-label="title"
-        :placeholder="
-          kind === 'hex' ? 'E3 81 93 E3 82 93 …' : 'ここにテキストを入力…'
-        "
+        :placeholder="placeholder"
         :class="{ invalid }"
         spellcheck="false"
         @focus="focused = true"
@@ -42,42 +40,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, watchEffect } from "vue";
-import { selectedByteCount, type Range, type ViewType } from "./codec";
+import { nextTick, ref, watchEffect } from "vue";
+import type { Range, ViewType } from "./codec";
+import type { PanelEvents, PanelProps } from "./panel";
 
-const props = defineProps<{
+const props = defineProps<PanelProps & {
   kind: ViewType;
   title: string;
   subtitle: string;
-  value: string;
+  placeholder: string;
   countLabel: string;
-  selection: Range;
-  applySelection: boolean;
-  showHighlight: boolean;
-  invalid: boolean;
+  positionLabel: string;
+  invalid?: boolean;
 }>();
-const emit = defineEmits<{
-  edit: [value: string, selection: Range];
-  "selection-change": [selection: Range];
-}>();
-
-const positionLabel = computed(() => {
-  if (props.invalid) return "—";
-
-  const [start, end] = props.selection;
-  const hex = props.kind === "hex";
-  const before = hex
-    ? Math.floor((start + 1) / 3)
-    : Array.from(props.value.slice(0, start)).length;
-  const count = hex
-    ? selectedByteCount(props.selection)
-    : Array.from(props.value.slice(start, end)).length;
-  const unit = hex ? "バイト" : "文字";
-  const first = before + 1;
-
-  if (count > 1) return `${first}〜${before + count}${unit}目`;
-  return `${first}${unit}目`;
-});
+const emit = defineEmits<PanelEvents>();
 
 const textarea = ref<HTMLTextAreaElement | null>(null);
 const mirror = ref<HTMLPreElement | null>(null);

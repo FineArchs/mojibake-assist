@@ -15,28 +15,31 @@
     <div class="divider"></div>
     <main>
       <section class="workspace">
-        <EncodingPanel
-          v-for="p in panels"
-          :key="p.id"
-          :kind="p.id"
-          :title="p.title"
-          :subtitle="p.subtitle"
-          :value="
-            p.id === 'hex' && pendingHex !== null
-              ? pendingHex
-              : displays[p.id].text
-          "
-          :count-label="
-            p.id === 'hex'
-              ? `${bytes.length} bytes`
-              : `${Array.from(displays[p.id].text).length}文字`
-          "
-          :selection="characterRange(displays[p.id], ...selected)"
-          :apply-selection="pendingHex === null && selectionSource !== p.id"
-          :show-highlight="pendingHex === null && selected[0] !== selected[1]"
-          :invalid="p.id === 'hex' && !!error"
-          @edit="(value, range) => update(p.id, value, range)"
-          @selection-change="select(p.id, $event)"
+        <ShiftJisPanel
+          :value="displays.sjis.text"
+          :selection="characterRange(displays.sjis, ...selected)"
+          :apply-selection="pendingHex === null && selectionSource !== 'sjis'"
+          :show-highlight="showHighlight"
+          @edit="(value, range) => update('sjis', value, range)"
+          @selection-change="select('sjis', $event)"
+        />
+        <BinaryPanel
+          :value="pendingHex ?? displays.hex.text"
+          :byte-count="bytes.length"
+          :invalid="!!error"
+          :selection="characterRange(displays.hex, ...selected)"
+          :apply-selection="pendingHex === null && selectionSource !== 'hex'"
+          :show-highlight="showHighlight"
+          @edit="(value, range) => update('hex', value, range)"
+          @selection-change="select('hex', $event)"
+        />
+        <Utf8Panel
+          :value="displays.utf8.text"
+          :selection="characterRange(displays.utf8, ...selected)"
+          :apply-selection="pendingHex === null && selectionSource !== 'utf8'"
+          :show-highlight="showHighlight"
+          @edit="(value, range) => update('utf8', value, range)"
+          @selection-change="select('utf8', $event)"
         />
       </section>
       <div v-if="error" class="error" role="alert">
@@ -52,7 +55,9 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import EncodingPanel from "./EncodingPanel.vue";
+import ShiftJisPanel from "./ShiftJisPanel.vue";
+import BinaryPanel from "./BinaryPanel.vue";
+import Utf8Panel from "./Utf8Panel.vue";
 import {
   byteRangeToHex,
   characterRange,
@@ -70,16 +75,9 @@ const error = ref("");
 const pendingHex = ref<string | null>(null);
 const selectionSource = ref<ViewType | null>(null);
 
-const panels: { id: ViewType; title: string; subtitle: string; }[] =
-  [
-    {
-      id: "sjis",
-      title: "Shift-JIS",
-      subtitle: "文字化けしたテキスト",
-    },
-    { id: "hex", title: "Binary", subtitle: "バイト列 · 16進数" },
-    { id: "utf8", title: "UTF-8", subtitle: "復元後のテキスト" },
-  ];
+const showHighlight = computed(
+  () => pendingHex.value === null && selected.value[0] !== selected.value[1],
+);
 
 const displays = computed(() => ({
   sjis: display(bytes.value, "sjis"),

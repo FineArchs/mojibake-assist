@@ -19,7 +19,9 @@
         ref="textarea"
         :value="value"
         :aria-label="title"
-        :placeholder="kind === 'hex' ? 'E3 81 93 E3 82 93 …' : 'ここにテキストを入力…'"
+        :placeholder="
+          kind === 'hex' ? 'E3 81 93 E3 82 93 …' : 'ここにテキストを入力…'
+        "
         :class="{ invalid }"
         spellcheck="false"
         @focus="focused = true"
@@ -34,7 +36,9 @@
       ></textarea>
     </div>
     <div class="panel-foot">
-      <span>{{ countLabel }}</span><span>{{ kind === "hex" ? "00 — FF" : "編集可能" }}</span>
+      <span>{{ countLabel }}</span><span>{{
+        kind === "hex" ? "00 — FF" : "編集可能"
+      }}</span>
     </div>
   </article>
 </template>
@@ -77,18 +81,21 @@ function syncScroll() {
   mirror.value.scrollLeft = textarea.value.scrollLeft;
 }
 
-watchEffect(() => {
-  const el = textarea.value;
-  const [start, end] = props.selection;
-  // Apply after Vue has updated the textarea value and rendered the mirror.
-  if (el && props.applySelection && !composing) {
-    if (el.selectionStart !== start || el.selectionEnd !== end) {
-      el.setSelectionRange(start, end);
+watchEffect(
+  () => {
+    const el = textarea.value;
+    const [start, end] = props.selection;
+    // Apply after Vue has updated the textarea value and rendered the mirror.
+    if (el && props.applySelection && !composing) {
+      if (el.selectionStart !== start || el.selectionEnd !== end) {
+        el.setSelectionRange(start, end);
+      }
+      lastSelection = readSelection(el);
     }
-    lastSelection = readSelection(el);
-  }
-  syncScroll();
-}, { flush: "post" });
+    syncScroll();
+  },
+  { flush: "post" },
+);
 
 function reportSelection() {
   const el = textarea.value;

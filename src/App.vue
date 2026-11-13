@@ -21,8 +21,16 @@
           :title="p.title"
           :subtitle="p.subtitle"
           :number="p.number"
-          :value="p.id === 'hex' && pendingHex !== null ? pendingHex : views[p.id].text"
-          :count-label="p.id === 'hex' ? `${bytes.length} bytes` : `${views[p.id].text.length} UTF-16 units`"
+          :value="
+            p.id === 'hex' && pendingHex !== null
+              ? pendingHex
+              : views[p.id].text
+          "
+          :count-label="
+            p.id === 'hex'
+              ? `${bytes.length} bytes`
+              : `${views[p.id].text.length} UTF-16 units`
+          "
           :selection="characterRange(views[p.id], ...selected)"
           :apply-selection="pendingHex === null && selectionSource !== p.id"
           :show-highlight="pendingHex === null && selected[0] !== selected[1]"

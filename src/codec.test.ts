@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { display, encode, parseHex, characterRange } from "./codec";
+import { byteRangeToHex, characterRange, display, encode, normalizeHexRange, parseHex, selectedByteCount } from "./codec";
 
 describe("shared byte model", () => {
   it("encodes Japanese in both encodings", () => {
@@ -16,7 +16,7 @@ describe("shared byte model", () => {
     const d = display(encode("Aあ😀", "utf8"), "utf8");
     expect(d.text).toBe("Aあ😀");
     expect(d.boundaries).toEqual([0, 1, 4, 4, 8]);
-    expect(characterRange(d, 1, 4)).toEqual([1, 2]);
+    expect(characterRange(d, 3, 11)).toEqual([1, 2]);
   });
   it("matches the platform decoder on malformed input", () => {
     for (const data of [
@@ -35,19 +35,32 @@ describe("shared byte model", () => {
         );
     }
   });
-  it("highlights characters overlapped by a partial byte selection", () => {
+  it("highlights a UTF-8 character for every nonempty subset of its HEX text", () => {
     const utf8 = display(encode("Aあ😀", "utf8"), "utf8");
-    expect(characterRange(utf8, 2, 3)).toEqual([1, 2]);
-    expect(characterRange(utf8, 5, 6)).toEqual([2, 4]);
-    expect(characterRange(utf8, 3, 5)).toEqual([1, 4]);
-    expect(characterRange(utf8, 2, 2)).toEqual([2, 2]);
-
-    const sjis = display(encode("あ", "sjis"), "sjis");
-    expect(characterRange(sjis, 1, 2)).toEqual([0, 1]);
+    for (let start = 3; start < 11; start++) {
+      for (let end = start + 1; end <= 11; end++) {
+        expect(characterRange(utf8, start, end)).toEqual([1, 2]);
+      }
+    }
+    expect(characterRange(utf8, 2, 3)).toEqual([1, 1]);
+    expect(characterRange(utf8, 5, 5)).toEqual([2, 2]);
+    expect(characterRange(utf8, 14, 15)).toEqual([2, 4]);
+    expect(characterRange(utf8, 10, 13)).toEqual([1, 4]);
   });
-  it("selects exact hex byte groups", () => {
-    expect(
-      characterRange(display(new Uint8Array([1, 2, 3]), "hex"), 1, 3),
-    ).toEqual([3, 8]);
+
+  it("includes spaces inside a Shift-JIS character", () => {
+    const sjis = display(encode("あ", "sjis"), "sjis");
+    expect(characterRange(sjis, 2, 3)).toEqual([0, 1]);
+  });
+
+  it("preserves exact HEX positions and maps byte spans back to HEX", () => {
+    const hex = display(encode("Aあ", "utf8"), "hex");
+    expect(characterRange(hex, 5, 6)).toEqual([5, 6]);
+    expect(byteRangeToHex(1, 4, hex.text.length)).toEqual([3, 11]);
+    expect(byteRangeToHex(4, 4, hex.text.length)).toEqual([11, 11]);
+    expect(normalizeHexRange("e3 81\n82", [2, 3])).toEqual([2, 3]);
+    expect(normalizeHexRange("e38182", [2, 2])).toEqual([2, 2]);
+    expect(selectedByteCount([2, 3])).toBe(0);
+    expect(selectedByteCount([1, 4])).toBe(2);
   });
 });

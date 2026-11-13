@@ -28,9 +28,7 @@ export function display(bytes: Uint8Array, view: ViewType): Display {
     return {
       text,
       hex: true,
-      boundaries: Array.from({ length: text.length + 1 }, (_, i) =>
-        Math.min(bytes.length, Math.floor((i + 1) / 3)),
-      ),
+      boundaries: [],
     };
   }
   const decoder = new TextDecoder(view === "sjis" ? "shift-jis" : "utf-8", {
@@ -97,24 +95,56 @@ export function display(bytes: Uint8Array, view: ViewType): Display {
   }
   return { text: normalized, boundaries: mapped };
 }
-export function characterRange(
-  d: Display,
-  start: number,
-  end: number,
-): [number, number] {
-  if (d.hex) return [
-    Math.min(d.text.length, start * 3),
-    Math.min(d.text.length, end === start ? end * 3 : end * 3 - 1),
+export type Range = [number, number];
+
+// In canonical HEX, a byte starts at 3 * offset and occupies two digits.
+export function byteRangeToHex(start: number, end: number, hexLength: number): Range {
+  return [
+    Math.min(hexLength, start * 3),
+    Math.min(hexLength, start === end ? end * 3 : end * 3 - 1),
   ];
-  let [a, z] = [start, end].map(p => {
-    const idx = d.boundaries.findIndex(b => b >= p); // 二分探索にする？
-    return idx < 0 ? d.text.length : idx;
-  });
-  // aは切り上げる（zは切り下げなので何もしない）
-  if (start < end && d.boundaries[a]! > start) {
-    a--;
-    // Both UTF-16 units of a surrogate pair share a starting byte offset.
-    while (d.boundaries[a] === d.boundaries[a - 1]) a--;
+}
+
+// Map the selection in an editable HEX draft to the normalized HEX string.
+export function normalizeHexRange(text: string, [start, end]: Range): Range {
+  const digits = (offset: number) => text.slice(0, offset).replace(/\s/g, "").length;
+  const a = digits(start);
+  const z = digits(end);
+  const count = digits(text.length);
+  const digitPosition = (index: number) => index + Math.floor(index / 2);
+  const length = count === 0 ? 0 : digitPosition(count - 1) + 1;
+  const from = Math.min(length, digitPosition(a));
+  if (start === end) {
+    // Keep either side of an existing separator distinguishable.
+    const caret = a > 0 && a < count && a % 2 === 0 && !/\s/.test(text[start - 1]!)
+      ? from - 1 : from;
+    return [caret, caret];
   }
-  return [a, z];
+  if (a < z) return [from, digitPosition(z - 1) + 1];
+  if (a > 0 && a < count && a % 2 === 0) return [from - 1, from];
+  return [from, from];
+}
+
+export function selectedByteCount([start, end]: Range): number {
+  if (start === end) return 0;
+  const first = Math.floor(start / 3) + (start % 3 === 2 ? 1 : 0);
+  return Math.max(0, Math.floor((end - 1) / 3) - first + 1);
+}
+
+export function characterRange(d: Display, start: number, end: number): Range {
+  if (d.hex) return [start, end];
+
+  const { boundaries, text } = d;
+  // A character covers its first through last HEX digit, including internal spaces.
+  const after = boundaries.findIndex((byte) => byte * 3 >= end);
+  const z = after < 0 ? text.length : after;
+  if (start === end) return [z, z];
+
+  const firstEnd = boundaries.findIndex((byte, i) => i > 0 && byte * 3 - 1 > start);
+  let a = firstEnd < 0 ? text.length : firstEnd - 1;
+  // A surrogate pair can have two UTF-16 positions at the same byte offset.
+  if (firstEnd >= 0) {
+    while (a > 0 && boundaries[a] === boundaries[a - 1]) a--;
+  }
+  return [Math.min(a, z), z];
 }

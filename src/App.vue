@@ -44,9 +44,9 @@
       </div>
       <div class="status" aria-live="polite">
         <span
-          ><b>{{ selected[0] }} — {{ selected[1] }}</b>
+          ><b>{{ selectedBytes.start }} — {{ selectedBytes.end }}</b>
           <span class="muted"
-            >（{{ selected[1] - selected[0] }} bytes）</span
+            >（{{ selectedBytes.count }} bytes）</span
           >選択中</span
         >
       </div>
@@ -61,10 +61,26 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import EncodingPanel from "./EncodingPanel.vue";
-import { characterRange, display, encode, parseHex, type ViewType } from "./codec";
+import {
+  byteRangeToHex,
+  characterRange,
+  display,
+  encode,
+  normalizeHexRange,
+  parseHex,
+  selectedByteCount,
+  type Range,
+  type ViewType,
+} from "./codec";
 
 const bytes = ref<Uint8Array>(new Uint8Array());
-const selected = ref<[number, number]>([0, 0]);
+const selected = ref<Range>([0, 0]);
+const selectedBytes = computed(() => {
+  const count = selectedByteCount(selected.value);
+  // A HEX separator denotes the boundary before the next byte.
+  const start = Math.floor((selected.value[0] + 1) / 3);
+  return { start, end: start + count, count };
+});
 const error = ref("");
 const pendingHex = ref<string | null>(null);
 const selectionSource = ref<ViewType | null>(null);
@@ -86,17 +102,16 @@ const displays = computed(() => ({
   utf8: display(bytes.value, "utf8"),
 }));
 
-function select(id: ViewType, [start, end]: [number, number]) {
+function select(id: ViewType, [start, end]: Range) {
   if (pendingHex.value !== null) return;
-  const d = displays.value[id];
   selectionSource.value = id;
-  selected.value = [
-    d.boundaries[start] ?? 0,
-    d.boundaries[end] ?? bytes.value.length,
-  ];
+  const { boundaries } = displays.value[id];
+  selected.value = id === "hex"
+    ? [start, end]
+    : byteRangeToHex(boundaries[start]!, boundaries[end]!, displays.value.hex.text.length);
 }
 
-function update(id: ViewType, value: string, [a, b]: [number, number]) {
+function update(id: ViewType, value: string, [a, b]: Range) {
   if (id === "hex") {
     const parsed = parseHex(value);
     if (!parsed) {
@@ -110,16 +125,13 @@ function update(id: ViewType, value: string, [a, b]: [number, number]) {
   pendingHex.value = null;
   error.value = "";
   selectionSource.value = null;
-  selected.value =
-    id === "hex"
-      ? [
-          Math.floor(value.slice(0, a).replace(/\s/g, "").length / 2),
-          Math.floor(value.slice(0, b).replace(/\s/g, "").length / 2),
-        ]
-      : [
-          encode(value.slice(0, a), id).length,
-          encode(value.slice(0, b), id).length,
-        ];
+  selected.value = id === "hex"
+    ? normalizeHexRange(value, [a, b])
+    : byteRangeToHex(
+        encode(value.slice(0, a), id).length,
+        encode(value.slice(0, b), id).length,
+        displays.value.hex.text.length,
+      );
 }
 
 function sample() {

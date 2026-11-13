@@ -35,16 +35,15 @@
       ></textarea>
     </div>
     <div class="panel-foot">
-      <span>{{ countLabel }}</span><span>{{
-        kind === "hex" ? "00 — FF" : "編集可能"
-      }}</span>
+      <span>{{ countLabel }}</span>
+      <span>{{ positionLabel }}</span>
     </div>
   </article>
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref, watchEffect } from "vue";
-import type { ViewType } from "./codec";
+import { computed, nextTick, ref, watchEffect } from "vue";
+import { selectedByteCount, type ViewType } from "./codec";
 
 type Range = [number, number];
 const props = defineProps<{
@@ -62,6 +61,24 @@ const emit = defineEmits<{
   edit: [value: string, selection: Range];
   "selection-change": [selection: Range];
 }>();
+
+const positionLabel = computed(() => {
+  if (props.invalid) return "—";
+
+  const [start, end] = props.selection;
+  const hex = props.kind === "hex";
+  const before = hex
+    ? Math.floor((start + 1) / 3)
+    : Array.from(props.value.slice(0, start)).length;
+  const count = hex
+    ? selectedByteCount(props.selection)
+    : Array.from(props.value.slice(start, end)).length;
+  const unit = hex ? "バイト" : "文字";
+  const first = before + 1;
+
+  if (count > 1) return `${first}〜${before + count}${unit}目`;
+  return `${first}${unit}目`;
+});
 
 const textarea = ref<HTMLTextAreaElement | null>(null);
 const mirror = ref<HTMLPreElement | null>(null);

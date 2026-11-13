@@ -29,7 +29,7 @@
           :count-label="
             p.id === 'hex'
               ? `${bytes.length} bytes`
-              : `${displays[p.id].text.length}文字`
+              : `${Array.from(displays[p.id].text).length}文字`
           "
           :selection="characterRange(displays[p.id], ...selected)"
           :apply-selection="pendingHex === null && selectionSource !== p.id"
@@ -41,14 +41,6 @@
       </section>
       <div v-if="error" class="error" role="alert">
         {{ error }} 他のビューは最後に確定したバイト列を表示しています。
-      </div>
-      <div class="status" aria-live="polite">
-        <span
-          ><b>{{ selectedBytes.start }} — {{ selectedBytes.end }}</b>
-          <span class="muted"
-            >（{{ selectedBytes.count }} bytes）</span
-          >選択中</span
-        >
       </div>
     </main>
     <div class="divider"></div>
@@ -68,19 +60,12 @@ import {
   encode,
   normalizeHexRange,
   parseHex,
-  selectedByteCount,
   type Range,
   type ViewType,
 } from "./codec";
 
 const bytes = ref<Uint8Array>(new Uint8Array());
 const selected = ref<Range>([0, 0]);
-const selectedBytes = computed(() => {
-  const count = selectedByteCount(selected.value);
-  // A HEX separator denotes the boundary before the next byte.
-  const start = Math.floor((selected.value[0] + 1) / 3);
-  return { start, end: start + count, count };
-});
 const error = ref("");
 const pendingHex = ref<string | null>(null);
 const selectionSource = ref<ViewType | null>(null);

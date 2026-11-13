@@ -265,24 +265,6 @@ textarea::selection {
   font-size: 10px;
   color: #546e68;
 }
-.status {
-  text-align: right;
-  font-size: 11px;
-  color: #6e8783;
-  padding: 16px 3px;
-}
-.status i {
-  margin-right: 7px;
-}
-.status b {
-  font-weight: 500;
-  color: #41635d;
-  margin-left: 10px;
-  font-family: monospace;
-}
-.muted {
-  color: #546e68;
-}
 .info {
   border: 1px solid #87a89e;
   border-radius: 50%;

@@ -1,3 +1,44 @@
+<template>
+  <article :class="['panel', kind]">
+    <div class="panel-head">
+      <div class="panel-title">
+        <span class="number">{{ number }}</span>
+        <h2>{{ title }}</h2>
+      </div>
+      <span class="tag">{{ kind === "hex" ? "HEX" : "TEXT" }}</span>
+    </div>
+    <p class="subtitle">{{ subtitle }}</p>
+    <div class="editor">
+      <pre
+        v-if="!focused && showHighlight"
+        ref="mirror"
+        class="selection-mirror"
+        aria-hidden="true"
+      ><span>{{ value.slice(0, selection[0]) }}</span><mark>{{ value.slice(...selection) }}</mark><span>{{ value.slice(selection[1]) }}</span></pre>
+      <textarea
+        ref="textarea"
+        :value="value"
+        :aria-label="title"
+        :placeholder="kind === 'hex' ? 'E3 81 93 E3 82 93 …' : 'ここにテキストを入力…'"
+        :class="{ invalid }"
+        spellcheck="false"
+        @focus="focused = true"
+        @blur="blur"
+        @scroll="syncScroll"
+        @input="reportEdit"
+        @select="reportSelection"
+        @keyup="reportSelection"
+        @pointerup="reportSelection"
+        @compositionstart="composing = true"
+        @compositionend="finishComposition"
+      ></textarea>
+    </div>
+    <div class="panel-foot">
+      <span>{{ countLabel }}</span><span>{{ kind === "hex" ? "00 — FF" : "編集可能" }}</span>
+    </div>
+  </article>
+</template>
+
 <script setup lang="ts">
 import { nextTick, ref, watchEffect } from "vue";
 import type { View } from "./codec";
@@ -75,44 +116,3 @@ function blur() {
   void nextTick(syncScroll);
 }
 </script>
-
-<template>
-  <article :class="['panel', kind]">
-    <div class="panel-head">
-      <div class="panel-title">
-        <span class="number">{{ number }}</span>
-        <h2>{{ title }}</h2>
-      </div>
-      <span class="tag">{{ kind === "hex" ? "HEX" : "TEXT" }}</span>
-    </div>
-    <p class="subtitle">{{ subtitle }}</p>
-    <div class="editor">
-      <pre
-        v-if="!focused && showHighlight"
-        ref="mirror"
-        class="selection-mirror"
-        aria-hidden="true"
-      ><span>{{ value.slice(0, selection[0]) }}</span><mark>{{ value.slice(...selection) }}</mark><span>{{ value.slice(selection[1]) }}</span></pre>
-      <textarea
-        ref="textarea"
-        :value="value"
-        :aria-label="title"
-        :placeholder="kind === 'hex' ? 'E3 81 93 E3 82 93 …' : 'ここにテキストを入力…'"
-        :class="{ invalid }"
-        spellcheck="false"
-        @focus="focused = true"
-        @blur="blur"
-        @scroll="syncScroll"
-        @input="reportEdit"
-        @select="reportSelection"
-        @keyup="reportSelection"
-        @pointerup="reportSelection"
-        @compositionstart="composing = true"
-        @compositionend="finishComposition"
-      ></textarea>
-    </div>
-    <div class="panel-foot">
-      <span>{{ countLabel }}</span><span>{{ kind === "hex" ? "00 — FF" : "編集可能" }}</span>
-    </div>
-  </article>
-</template>

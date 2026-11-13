@@ -1,11 +1,11 @@
 import Encoding from "encoding-japanese";
-export type View = "sjis" | "hex" | "utf8";
+export type ViewType = "sjis" | "hex" | "utf8";
 export interface Display {
   text: string;
   boundaries: number[];
   hex?: boolean;
 }
-export function encode(text: string, view: View): Uint8Array {
+export function encode(text: string, view: ViewType): Uint8Array {
   if (view === "utf8") return new TextEncoder().encode(text);
   return new Uint8Array(
     Encoding.convert(Encoding.stringToCode(text), {
@@ -20,7 +20,7 @@ export function parseHex(text: string): Uint8Array | null {
   if (!/^(?:[0-9a-fA-F]{2})*$/.test(compact)) return null;
   return Uint8Array.from(compact.match(/../g) ?? [], (h) => parseInt(h, 16));
 }
-export function display(bytes: Uint8Array, view: View): Display {
+export function display(bytes: Uint8Array, view: ViewType): Display {
   if (view === "hex") {
     const text = Array.from(bytes, (b) =>
       b.toString(16).padStart(2, "0").toUpperCase(),
@@ -102,12 +102,19 @@ export function characterRange(
   start: number,
   end: number,
 ): [number, number] {
-  if (d.hex)
-    return [
-      Math.min(d.text.length, start * 3),
-      Math.min(d.text.length, end === start ? end * 3 : end * 3 - 1),
-    ];
-  const a = d.boundaries.findIndex((b) => b >= start);
-  const z = d.boundaries.findIndex((b) => b >= end);
-  return [a < 0 ? d.text.length : a, z < 0 ? d.text.length : z];
+  if (d.hex) return [
+    Math.min(d.text.length, start * 3),
+    Math.min(d.text.length, end === start ? end * 3 : end * 3 - 1),
+  ];
+  let [a, z] = [start, end].map(p => {
+    const idx = d.boundaries.findIndex(b => b >= p); // 二分探索にする？
+    return idx < 0 ? d.text.length : idx;
+  });
+  // aは切り上げる（zは切り下げなので何もしない）
+  if (start < end && d.boundaries[a]! > start) {
+    a--;
+    // Both UTF-16 units of a surrogate pair share a starting byte offset.
+    while (d.boundaries[a] === d.boundaries[a - 1]) a--;
+  }
+  return [a, z];
 }

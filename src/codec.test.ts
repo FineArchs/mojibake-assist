@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { display, encode, parseHex, characterRange } from "./codec";
+
 describe("shared byte model", () => {
   it("encodes Japanese in both encodings", () => {
     expect([...encode("あ", "sjis")]).toEqual([0x82, 0xa0]);
@@ -33,6 +34,16 @@ describe("shared byte model", () => {
           ),
         );
     }
+  });
+  it("highlights characters overlapped by a partial byte selection", () => {
+    const utf8 = display(encode("Aあ😀", "utf8"), "utf8");
+    expect(characterRange(utf8, 2, 3)).toEqual([1, 2]);
+    expect(characterRange(utf8, 5, 6)).toEqual([2, 4]);
+    expect(characterRange(utf8, 3, 5)).toEqual([1, 4]);
+    expect(characterRange(utf8, 2, 2)).toEqual([2, 2]);
+
+    const sjis = display(encode("あ", "sjis"), "sjis");
+    expect(characterRange(sjis, 1, 2)).toEqual([0, 1]);
   });
   it("selects exact hex byte groups", () => {
     expect(

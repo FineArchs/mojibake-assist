@@ -29,6 +29,7 @@
         @select="reportSelection"
         @keyup="reportSelection"
         @pointerup="reportSelection"
+        @selectionchange="reportSelection"
         @compositionstart="composing = true"
         @compositionend="finishComposition"
       ></textarea>
@@ -43,11 +44,11 @@
 
 <script setup lang="ts">
 import { nextTick, ref, watchEffect } from "vue";
-import type { View } from "./codec";
+import type { ViewType } from "./codec";
 
 type Range = [number, number];
 const props = defineProps<{
-  kind: View;
+  kind: ViewType;
   title: string;
   subtitle: string;
   value: string;

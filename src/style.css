@@ -263,7 +263,7 @@ textarea::selection {
   display: flex;
   justify-content: space-between;
   font-size: 10px;
-  color: #8a9c98;
+  color: #546e68;
 }
 .status {
   text-align: right;
@@ -281,7 +281,7 @@ textarea::selection {
   font-family: monospace;
 }
 .muted {
-  color: #9caea8;
+  color: #546e68;
 }
 .info {
   border: 1px solid #87a89e;

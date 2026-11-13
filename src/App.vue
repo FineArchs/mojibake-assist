@@ -5,12 +5,12 @@
         <span class="brand-icon">縺</span>
         文字化けアシスト
       </a>
-      <span class="toolbar">
+      <div class="toolbar">
         <div class="actions">
           <button @click="sample">サンプルを試す <span>↓</span></button
           ><button @click="clear">クリア</button>
         </div>
-      </span>
+      </div>
     </header>
     <div class="divider"></div>
     <main>
@@ -24,14 +24,14 @@
           :value="
             p.id === 'hex' && pendingHex !== null
               ? pendingHex
-              : views[p.id].text
+              : displays[p.id].text
           "
           :count-label="
             p.id === 'hex'
               ? `${bytes.length} bytes`
-              : `${views[p.id].text.length} UTF-16 units`
+              : `${displays[p.id].text.length}文字`
           "
-          :selection="characterRange(views[p.id], ...selected)"
+          :selection="characterRange(displays[p.id], ...selected)"
           :apply-selection="pendingHex === null && selectionSource !== p.id"
           :show-highlight="pendingHex === null && selected[0] !== selected[1]"
           :invalid="p.id === 'hex' && !!error"
@@ -61,15 +61,15 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import EncodingPanel from "./EncodingPanel.vue";
-import { characterRange, display, encode, parseHex, type View } from "./codec";
+import { characterRange, display, encode, parseHex, type ViewType } from "./codec";
 
 const bytes = ref<Uint8Array>(new Uint8Array());
 const selected = ref<[number, number]>([0, 0]);
 const error = ref("");
 const pendingHex = ref<string | null>(null);
-const selectionSource = ref<View | null>(null);
+const selectionSource = ref<ViewType | null>(null);
 
-const panels: { id: View; title: string; subtitle: string; }[] =
+const panels: { id: ViewType; title: string; subtitle: string; }[] =
   [
     {
       id: "sjis",
@@ -80,15 +80,15 @@ const panels: { id: View; title: string; subtitle: string; }[] =
     { id: "utf8", title: "UTF-8", subtitle: "復元後のテキスト" },
   ];
 
-const views = computed(() => ({
+const displays = computed(() => ({
   sjis: display(bytes.value, "sjis"),
   hex: display(bytes.value, "hex"),
   utf8: display(bytes.value, "utf8"),
 }));
 
-function select(id: View, [start, end]: [number, number]) {
+function select(id: ViewType, [start, end]: [number, number]) {
   if (pendingHex.value !== null) return;
-  const d = views.value[id];
+  const d = displays.value[id];
   selectionSource.value = id;
   selected.value = [
     d.boundaries[start] ?? 0,
@@ -96,7 +96,7 @@ function select(id: View, [start, end]: [number, number]) {
   ];
 }
 
-function update(id: View, value: string, [a, b]: [number, number]) {
+function update(id: ViewType, value: string, [a, b]: [number, number]) {
   if (id === "hex") {
     const parsed = parseHex(value);
     if (!parsed) {

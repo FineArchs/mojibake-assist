@@ -1,16 +1,12 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from "vue";
+import { computed, ref } from "vue";
+import EncodingPanel from "./EncodingPanel.vue";
 import { characterRange, display, encode, parseHex, type View } from "./codec";
 const bytes = ref<Uint8Array>(new Uint8Array());
 const selected = ref<[number, number]>([0, 0]);
 const error = ref("");
 const pendingHex = ref<string | null>(null);
-const composing = ref(false);
-const focused = ref<View | null>(null);
-function range(id: View) {
-  return characterRange(views.value[id], ...selected.value);
-}
-const areas: Partial<Record<View, HTMLTextAreaElement>> = {};
+const selectionSource = ref<View | null>(null);
 const panels: { id: View; title: string; subtitle: string; number: string }[] =
   [
     {
@@ -27,64 +23,49 @@ const views = computed(() => ({
   hex: display(bytes.value, "hex"),
   utf8: display(bytes.value, "utf8"),
 }));
-function syncSelection(source?: View) {
-  for (const p of panels) {
-    if (p.id === source) continue;
-    const el = areas[p.id];
-    if (!el) continue;
-    const [a, b] = characterRange(views.value[p.id], ...selected.value);
-    el.setSelectionRange(a, b);
-  }
-}
-function select(id: View) {
-  if (composing.value || pendingHex.value !== null) return;
-  const el = areas[id];
-  if (!el || document.activeElement !== el) return;
+function select(id: View, [start, end]: [number, number]) {
+  if (pendingHex.value !== null) return;
   const d = views.value[id];
+  selectionSource.value = id;
   selected.value = [
-    d.boundaries[el.selectionStart] ?? 0,
-    d.boundaries[el.selectionEnd] ?? bytes.value.length,
+    d.boundaries[start] ?? 0,
+    d.boundaries[end] ?? bytes.value.length,
   ];
-  syncSelection(id);
 }
-async function update(id: View, event: Event) {
-  if (composing.value) return;
-  const el = event.target as HTMLTextAreaElement;
+function update(id: View, value: string, [a, b]: [number, number]) {
   if (id === "hex") {
-    const parsed = parseHex(el.value);
+    const parsed = parseHex(value);
     if (!parsed) {
-      pendingHex.value = el.value;
+      pendingHex.value = value;
       error.value =
         "16進数を2桁ずつ入力してください（空白・改行で区切れます）。";
       return;
     }
     bytes.value = parsed;
-  } else bytes.value = encode(el.value, id);
+  } else bytes.value = encode(value, id);
   pendingHex.value = null;
   error.value = "";
-  const a = el.selectionStart,
-    b = el.selectionEnd;
+  selectionSource.value = null;
   selected.value =
     id === "hex"
       ? [
-          Math.floor(el.value.slice(0, a).replace(/\s/g, "").length / 2),
-          Math.floor(el.value.slice(0, b).replace(/\s/g, "").length / 2),
+          Math.floor(value.slice(0, a).replace(/\s/g, "").length / 2),
+          Math.floor(value.slice(0, b).replace(/\s/g, "").length / 2),
         ]
       : [
-          encode(el.value.slice(0, a), id).length,
-          encode(el.value.slice(0, b), id).length,
+          encode(value.slice(0, a), id).length,
+          encode(value.slice(0, b), id).length,
         ];
-  await nextTick();
-  syncSelection();
 }
 function sample() {
   bytes.value = encode("こんにちは、世界！\n文字化けを、読み解こう。", "utf8");
   pendingHex.value = null;
   error.value = "";
   selected.value = [0, 0];
-  nextTick(() => syncSelection());
+  selectionSource.value = null;
 }
 function clear() {
+  selectionSource.value = null;
   bytes.value = new Uint8Array();
   pendingHex.value = null;
   error.value = "";
@@ -108,73 +89,22 @@ function clear() {
         </div>
       </div>
       <section class="workspace">
-        <article v-for="p in panels" :key="p.id" :class="['panel', p.id]">
-          <div class="panel-head">
-            <div class="panel-title">
-              <span class="number">{{ p.number }}</span>
-              <h2>{{ p.title }}</h2>
-            </div>
-            <span class="tag">{{ p.id === "hex" ? "HEX" : "TEXT" }}</span>
-          </div>
-          <p class="subtitle">{{ p.subtitle }}</p>
-          <div class="editor">
-            <pre
-              v-if="
-                focused !== p.id &&
-                selected[0] !== selected[1] &&
-                pendingHex === null
-              "
-              class="selection-mirror"
-              aria-hidden="true"
-            ><span>{{views[p.id].text.slice(0,range(p.id)[0])}}</span><mark>{{views[p.id].text.slice(...range(p.id))}}</mark><span>{{views[p.id].text.slice(range(p.id)[1])}}</span></pre>
-            <textarea
-              @focus="focused = p.id"
-              @blur="focused = null"
-              @scroll="
-                (event) => {
-                  const el = event.target as HTMLTextAreaElement;
-                  const mirror = el.previousElementSibling;
-                  if (mirror) {
-                    mirror.scrollTop = el.scrollTop;
-                    mirror.scrollLeft = el.scrollLeft;
-                  }
-                }
-              "
-              :ref="
-                (el) => {
-                  if (el) areas[p.id] = el as HTMLTextAreaElement;
-                }
-              "
-              :value="
-                p.id === 'hex' && pendingHex !== null
-                  ? pendingHex
-                  : views[p.id].text
-              "
-              :aria-label="p.title"
-              :placeholder="
-                p.id === 'hex' ? 'E3 81 93 E3 82 93 …' : 'ここにテキストを入力…'
-              "
-              spellcheck="false"
-              :class="{ invalid: p.id === 'hex' && error }"
-              @input="update(p.id, $event)"
-              @select="select(p.id)"
-              @keyup="select(p.id)"
-              @pointerup="select(p.id)"
-              @compositionstart="composing = true"
-              @compositionend="
-                composing = false;
-                update(p.id, $event);
-              "
-            ></textarea>
-          </div>
-          <div class="panel-foot">
-            <span>{{
-              p.id === "hex"
-                ? `${bytes.length} bytes`
-                : `${views[p.id].text.length} UTF-16 units`
-            }}</span><span>{{ p.id === "hex" ? "00 — FF" : "編集可能" }}</span>
-          </div>
-        </article>
+        <EncodingPanel
+          v-for="p in panels"
+          :key="p.id"
+          :kind="p.id"
+          :title="p.title"
+          :subtitle="p.subtitle"
+          :number="p.number"
+          :value="p.id === 'hex' && pendingHex !== null ? pendingHex : views[p.id].text"
+          :count-label="p.id === 'hex' ? `${bytes.length} bytes` : `${views[p.id].text.length} UTF-16 units`"
+          :selection="characterRange(views[p.id], ...selected)"
+          :apply-selection="pendingHex === null && selectionSource !== p.id"
+          :show-highlight="pendingHex === null && selected[0] !== selected[1]"
+          :invalid="p.id === 'hex' && !!error"
+          @edit="(value, range) => update(p.id, value, range)"
+          @selection-change="select(p.id, $event)"
+        />
       </section>
       <div v-if="error" class="error" role="alert">
         {{ error }} 他のビューは最後に確定したバイト列を表示しています。

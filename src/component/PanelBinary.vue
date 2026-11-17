@@ -19,8 +19,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import EncodingPanel from "./EncodingPanel.vue";
-import { selectedByteCount } from "./codec";
-import { positionLabel, type PanelEvents, type PanelProps } from "./panel";
+import { selectedByteCount } from "../codec";
+import { positionLabel, type PanelEvents, type PanelProps } from "../panel";
 
 const props = defineProps<PanelProps & { byteCount: number; invalid: boolean }>();
 const emit = defineEmits<PanelEvents>();

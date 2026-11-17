@@ -15,7 +15,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import EncodingPanel from "./EncodingPanel.vue";
-import { textPositionLabel, type PanelEvents, type PanelProps } from "./panel";
+import { textPositionLabel, type PanelEvents, type PanelProps } from "../panel";
 
 const props = defineProps<PanelProps>();
 const emit = defineEmits<PanelEvents>();

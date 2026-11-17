@@ -54,8 +54,8 @@
 <script setup lang="ts">
 import { nextTick, ref, watchEffect } from "vue";
 import ByteTextEditor from "./ByteTextEditor.vue";
-import type { Range, ViewType } from "./codec";
-import type { PanelEvents, PanelProps } from "./panel";
+import type { Range, ViewType } from "../codec";
+import type { PanelEvents, PanelProps } from "../panel";
 
 const props = defineProps<PanelProps & {
   kind: ViewType;

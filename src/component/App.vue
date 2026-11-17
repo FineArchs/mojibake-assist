@@ -2,7 +2,7 @@
   <div class="shell">
     <header>
       <a class="brand" href="./">
-        <img class="brand-icon" src="../icon.png" alt="" width="37" height="37" />
+        <img class="brand-icon" src="../../icon.png" alt="" width="37" height="37" />
         文字化けアシスト
       </a>
       <div class="toolbar">
@@ -15,17 +15,17 @@
     <div class="divider"></div>
     <main>
       <section class="workspace" @copy="copy" @cut="cut" @paste="paste" @keydown="historyKey" @beforeinput="historyInput">
-        <ShiftJisPanel
+        <PanelShiftJis
           v-bind="shiftJis"
           @edit="(value, range, before) => update('sjis', value, range, before)"
           @selection-change="select('sjis', $event)"
         />
-        <BinaryPanel
+        <PanelBinary
           v-bind="binary"
           @edit="(value, range) => update('hex', value, range)"
           @selection-change="select('hex', $event)"
         />
-        <Utf8Panel
+        <PanelUtf8
           v-bind="utf8"
           @edit="(value, range, before) => update('utf8', value, range, before)"
           @selection-change="select('utf8', $event)"
@@ -43,13 +43,13 @@
 </template>
 
 <script setup lang="ts">
-import ShiftJisPanel from "./ShiftJisPanel.vue";
-import BinaryPanel from "./BinaryPanel.vue";
-import Utf8Panel from "./Utf8Panel.vue";
-import { display, encode, parseHex, type Range, type ViewType } from "./codec";
-import { editorSelection } from "./editorDom";
-import { byteClipboardType } from "./byteEditor";
-import { createPanelStore } from "./store";
+import PanelShiftJis from "./PanelShiftJis.vue";
+import PanelBinary from "./PanelBinary.vue";
+import PanelUtf8 from "./PanelUtf8.vue";
+import { display, encode, parseHex, type Range, type ViewType } from "../codec";
+import { editorSelection } from "../editorDom";
+import { byteClipboardType } from "../byteEditor";
+import { createPanelStore } from "../store";
 
 const { shiftJis, binary, utf8, error, select, update, sample, clear, copyTextBytes, pasteBytes, editHistory } =
   createPanelStore();

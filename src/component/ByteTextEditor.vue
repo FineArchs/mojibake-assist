@@ -25,9 +25,9 @@
 
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref, watchEffect } from "vue";
-import type { Range } from "./codec";
-import { applyEditorSelection, editorSelection, editorText } from "./editorDom";
-import type { ByteMarker, PanelEvents, PanelProps } from "./panel";
+import type { Range } from "../codec";
+import { applyEditorSelection, editorSelection, editorText } from "../editorDom";
+import type { ByteMarker, PanelEvents, PanelProps } from "../panel";
 
 const props = defineProps<PanelProps & {
   title: string;

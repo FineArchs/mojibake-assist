@@ -51,7 +51,7 @@ import { editorSelection } from "./editorDom";
 import { byteClipboardType } from "./byteEditor";
 import { createPanelStore } from "./store";
 
-const { shiftJis, binary, utf8, error, select, update, sample, clear, copyTextBytes, pasteBytes, textHistory } =
+const { shiftJis, binary, utf8, error, select, update, sample, clear, copyTextBytes, pasteBytes, editHistory } =
   createPanelStore();
 function clipboardTarget(event: Event) {
   const el = event.target;
@@ -95,23 +95,24 @@ function paste(event: ClipboardEvent) {
     if (text) pasteBytes(target.id, target.range, encode(text, target.id));
   }
 }
-function isTextEditor(event: Event) {
-  return event.target instanceof HTMLElement && event.target.hasAttribute("data-byte-editor");
+function isPanelEditor(event: Event) {
+  return event.target instanceof HTMLElement &&
+    event.target.matches("textarea, [data-byte-editor]");
 }
 
 function historyKey(event: KeyboardEvent) {
   if (event.isComposing || !(event.ctrlKey || event.metaKey) || event.altKey ||
-      !isTextEditor(event)) return;
+      !isPanelEditor(event)) return;
   const key = event.key.toLowerCase();
   if (key !== "z" && key !== "y") return;
   event.preventDefault();
-  textHistory(key === "y" || event.shiftKey ? "redo" : "undo");
+  editHistory(key === "y" || event.shiftKey ? "redo" : "undo");
 }
 
 function historyInput(event: InputEvent) {
-  if (!isTextEditor(event) || !event.cancelable) return;
+  if (!isPanelEditor(event) || !event.cancelable) return;
   if (event.inputType !== "historyUndo" && event.inputType !== "historyRedo") return;
   event.preventDefault();
-  textHistory(event.inputType === "historyUndo" ? "undo" : "redo");
+  editHistory(event.inputType === "historyUndo" ? "undo" : "redo");
 }
 </script>

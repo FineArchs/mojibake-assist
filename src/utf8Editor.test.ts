@@ -14,9 +14,9 @@ describe("UTF-8 byte editing", () => {
     const payload = store.copyTextBytes("utf8", [1, 2]);
     store.pasteBytes("utf8", [1, 2], new Uint8Array());
     expect(store.binary.value.value).toBe("42");
-    store.textHistory("undo");
+    store.editHistory("undo");
     expect(store.binary.value.value).toBe("42 E3 81");
-    store.textHistory("redo");
+    store.editHistory("redo");
     expect(store.binary.value.value).toBe("42");
     store.pasteBytes("sjis", [0, 1], payload);
     expect(store.binary.value.value).toBe("E3 81");

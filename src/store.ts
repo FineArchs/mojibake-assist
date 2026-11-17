@@ -23,21 +23,35 @@ export function createPanelStore() {
   const pendingHex = ref<string | null>(null);
   const selectionSource = ref<ViewType | null>(null);
 
-  type Snapshot = { bytes: Uint8Array; selection: Range };
+  const draftSelection = ref<Range>([0, 0]);
+  type Snapshot = {
+    bytes: Uint8Array;
+    selection: Range;
+    draft: string | null;
+    draftSelection: Range;
+  };
   const undo: Snapshot[] = [];
   const redo: Snapshot[] = [];
-  const snapshot = (): Snapshot => ({ bytes: bytes.value, selection: selected.value });
-  function resetHistory() {
-    undo.length = redo.length = 0;
+  const snapshot = (): Snapshot => ({
+    bytes: bytes.value,
+    selection: selected.value,
+    draft: pendingHex.value,
+    draftSelection: draftSelection.value,
+  });
+  function recordEdit() {
+    undo.push(snapshot());
+    if (undo.length > 100) undo.shift();
+    redo.length = 0;
   }
-  function textHistory(direction: "undo" | "redo") {
+  function editHistory(direction: "undo" | "redo") {
     const [from, to] = direction === "undo" ? [undo, redo] : [redo, undo];
     const entry = from.pop();
     if (!entry) return;
     to.push(snapshot());
     bytes.value = entry.bytes;
     selected.value = entry.selection;
-    pendingHex.value = null;
+    pendingHex.value = entry.draft;
+    draftSelection.value = entry.draftSelection;
     selectionSource.value = null;
   }
 
@@ -52,7 +66,10 @@ export function createPanelStore() {
   }));
 
   function select(id: ViewType, [start, end]: Range) {
-    if (pendingHex.value !== null) return;
+    if (pendingHex.value !== null) {
+      if (id === "hex") draftSelection.value = [start, end];
+      return;
+    }
     selectionSource.value = id;
     const { boundaries } = displays.value[id];
     selected.value = id === "hex"
@@ -65,26 +82,25 @@ export function createPanelStore() {
       const previous = displays.value[id];
       if (!before && value === previous.text) return;
       const edit = textByteEdit(previous, value, b, id, before);
-      replaceBytes(edit.range, edit.inserted, edit.caret, true);
+      replaceBytes(edit.range, edit.inserted, edit.caret);
       return;
     }
+    if (value !== (pendingHex.value ?? displays.value.hex.text)) recordEdit();
     const parsed = parseHex(value);
     if (!parsed) {
       pendingHex.value = value;
+      draftSelection.value = [a, b];
+      selectionSource.value = "hex";
       return;
     }
     bytes.value = parsed;
-    resetHistory();
     pendingHex.value = null;
     selectionSource.value = null;
     selected.value = normalizeHexRange(value, [a, b]);
   }
 
-  function replaceBytes(range: Range, inserted: Uint8Array, caret = range[0] + inserted.length, track = false) {
-    if (track) {
-      undo.push(snapshot());
-      redo.length = 0;
-    } else resetHistory();
+  function replaceBytes(range: Range, inserted: Uint8Array, caret = range[0] + inserted.length) {
+    recordEdit();
     bytes.value = spliceBytes(bytes.value, range, inserted);
     pendingHex.value = null;
     selectionSource.value = null;
@@ -108,12 +124,12 @@ export function createPanelStore() {
       return true;
     }
     const { boundaries } = displays.value[id];
-    replaceBytes([boundaries[range[0]]!, boundaries[range[1]]!], inserted, undefined, true);
+    replaceBytes([boundaries[range[0]]!, boundaries[range[1]]!], inserted);
     return true;
   }
 
   function sample() {
-    resetHistory();
+    recordEdit();
     bytes.value = encode("文字化けのテストです。", "utf8");
     pendingHex.value = null;
     selected.value = [0, 0];
@@ -121,7 +137,7 @@ export function createPanelStore() {
   }
 
   function clear() {
-    resetHistory();
+    if (bytes.value.length || pendingHex.value !== null) recordEdit();
     selectionSource.value = null;
     bytes.value = new Uint8Array();
     pendingHex.value = null;
@@ -145,8 +161,9 @@ export function createPanelStore() {
         ? pendingHex.value ?? displays.value.hex.text
         : displays.value[id].text,
       markers: id === "hex" ? undefined : markers.value[id],
-      selection: characterRange(displays.value[id], ...selected.value),
-      applySelection: pendingHex.value === null && selectionSource.value !== id,
+      selection: id === "hex" && pendingHex.value !== null
+        ? draftSelection.value : characterRange(displays.value[id], ...selected.value),
+      applySelection: (id === "hex" || pendingHex.value === null) && selectionSource.value !== id,
       showHighlight: showHighlight.value,
     }));
   }
@@ -160,5 +177,5 @@ export function createPanelStore() {
     invalid: pendingHex.value !== null,
   }));
 
-  return { shiftJis, binary, utf8, error, select, update, sample, clear, copyTextBytes, pasteBytes, textHistory };
+  return { shiftJis, binary, utf8, error, select, update, sample, clear, copyTextBytes, pasteBytes, editHistory };
 }

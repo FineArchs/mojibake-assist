@@ -21,9 +21,9 @@ describe("Shift-JIS byte editing", () => {
     const payload = store.copyTextBytes("sjis", [2, 3]);
     store.pasteBytes("sjis", [2, 3], new Uint8Array());
     expect(store.binary.value.value).toBe("FF 42");
-    store.textHistory("undo");
+    store.editHistory("undo");
     expect(store.binary.value.value).toBe("FF 42 82");
-    store.textHistory("redo");
+    store.editHistory("redo");
     expect(store.binary.value.value).toBe("FF 42");
     store.pasteBytes("utf8", [0, 0], payload);
     expect(store.binary.value.value).toBe("82 FF 42");

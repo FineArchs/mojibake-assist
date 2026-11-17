@@ -32,11 +32,16 @@ import { nextTick, ref, watchEffect } from "vue";
 import type { Range } from "../codec";
 import type { PanelEvents, PanelProps } from "../panel";
 
-const props = defineProps<Pick<PanelProps, "value" | "selection" | "applySelection" | "showHighlight"> & {
-  title: string;
-  placeholder: string;
-  invalid: boolean;
-}>();
+const props = defineProps<
+  Pick<
+    PanelProps,
+    "value" | "selection" | "applySelection" | "showHighlight"
+  > & {
+    title: string;
+    placeholder: string;
+    invalid: boolean;
+  }
+>();
 const emit = defineEmits<PanelEvents>();
 
 const textarea = ref<HTMLTextAreaElement | null>(null);

@@ -5,10 +5,12 @@ import { createPanelStore } from "./store";
 describe("Shift-JIS byte editing", () => {
   it("matches decoding errors without swallowing a following ASCII byte", () => {
     expect(shiftJisDisplay(Uint8Array.of(0x82, 0x41, 0x3f, 0x82))).toEqual({
-      text: "�A?�", boundaries: [0, 1, 2, 3, 4],
+      text: "�A?�",
+      boundaries: [0, 1, 2, 3, 4],
     });
     expect(shiftJisDisplay(Uint8Array.of(0x82, 0xff))).toEqual({
-      text: "�", boundaries: [0, 2],
+      text: "�",
+      boundaries: [0, 2],
     });
   });
 

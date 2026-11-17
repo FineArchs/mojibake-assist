@@ -72,9 +72,14 @@ export function createPanelStore() {
     }
     selectionSource.value = id;
     const { boundaries } = displays.value[id];
-    selected.value = id === "hex"
-      ? [start, end]
-      : byteRangeToHex(boundaries[start]!, boundaries[end]!, displays.value.hex.text.length);
+    selected.value =
+      id === "hex"
+        ? [start, end]
+        : byteRangeToHex(
+            boundaries[start]!,
+            boundaries[end]!,
+            displays.value.hex.text.length,
+          );
   }
 
   function update(id: ViewType, value: string, [a, b]: Range, before?: Range) {
@@ -99,12 +104,20 @@ export function createPanelStore() {
     selected.value = normalizeHexRange(value, [a, b]);
   }
 
-  function replaceBytes(range: Range, inserted: Uint8Array, caret = range[0] + inserted.length) {
+  function replaceBytes(
+    range: Range,
+    inserted: Uint8Array,
+    caret = range[0] + inserted.length,
+  ) {
     recordEdit();
     bytes.value = spliceBytes(bytes.value, range, inserted);
     pendingHex.value = null;
     selectionSource.value = null;
-    selected.value = byteRangeToHex(caret, caret, displays.value.hex.text.length);
+    selected.value = byteRangeToHex(
+      caret,
+      caret,
+      displays.value.hex.text.length,
+    );
   }
 
   function copyTextBytes(id: "sjis" | "utf8", range: Range) {
@@ -147,9 +160,12 @@ export function createPanelStore() {
   const markers = computed(() => {
     function forView(id: "sjis" | "utf8") {
       const { boundaries, invalidOffsets } = displays.value[id];
-      return (invalidOffsets ?? []).map(index => ({
+      return (invalidOffsets ?? []).map((index) => ({
         index,
-        hex: display(bytes.value.subarray(boundaries[index], boundaries[index + 1]), "hex").text,
+        hex: display(
+          bytes.value.subarray(boundaries[index], boundaries[index + 1]),
+          "hex",
+        ).text,
       }));
     }
     return { sjis: forView("sjis"), utf8: forView("utf8") };
@@ -157,13 +173,18 @@ export function createPanelStore() {
 
   function panelState(id: ViewType) {
     return computed(() => ({
-      value: id === "hex"
-        ? pendingHex.value ?? displays.value.hex.text
-        : displays.value[id].text,
+      value:
+        id === "hex"
+          ? (pendingHex.value ?? displays.value.hex.text)
+          : displays.value[id].text,
       markers: id === "hex" ? undefined : markers.value[id],
-      selection: id === "hex" && pendingHex.value !== null
-        ? draftSelection.value : characterRange(displays.value[id], ...selected.value),
-      applySelection: (id === "hex" || pendingHex.value === null) && selectionSource.value !== id,
+      selection:
+        id === "hex" && pendingHex.value !== null
+          ? draftSelection.value
+          : characterRange(displays.value[id], ...selected.value),
+      applySelection:
+        (id === "hex" || pendingHex.value === null) &&
+        selectionSource.value !== id,
       showHighlight: showHighlight.value,
     }));
   }
@@ -177,5 +198,17 @@ export function createPanelStore() {
     invalid: pendingHex.value !== null,
   }));
 
-  return { shiftJis, binary, utf8, error, select, update, sample, clear, copyTextBytes, pasteBytes, editHistory };
+  return {
+    shiftJis,
+    binary,
+    utf8,
+    error,
+    select,
+    update,
+    sample,
+    clear,
+    copyTextBytes,
+    pasteBytes,
+    editHistory,
+  };
 }

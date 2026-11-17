@@ -10,7 +10,10 @@ describe("shared edit history", () => {
 
     store.editHistory("undo");
     expect(store.binary.value).toMatchObject({
-      value: "41 F", selection: [4, 4], invalid: true, applySelection: true,
+      value: "41 F",
+      selection: [4, 4],
+      invalid: true,
+      applySelection: true,
     });
     expect(store.utf8.value.value).toBe("A");
 

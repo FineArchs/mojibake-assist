@@ -21,7 +21,11 @@ export function parseHex(text: string): Uint8Array | null {
   if (!/^(?:[0-9a-fA-F]{2})*$/.test(compact)) return null;
   return Uint8Array.from(compact.match(/../g) ?? [], (h) => parseInt(h, 16));
 }
-export function display(bytes: Uint8Array, view: ViewType, invalidMarker?: string): Display {
+export function display(
+  bytes: Uint8Array,
+  view: ViewType,
+  invalidMarker?: string,
+): Display {
   if (view === "hex") {
     const text = Array.from(bytes, (b) =>
       b.toString(16).padStart(2, "0").toUpperCase(),
@@ -35,9 +39,10 @@ export function display(bytes: Uint8Array, view: ViewType, invalidMarker?: strin
   const decoder = new TextDecoder(view === "sjis" ? "shift-jis" : "utf-8", {
     ignoreBOM: true,
   });
-  const strictUtf8 = invalidMarker !== undefined && view === "utf8"
-    ? new TextDecoder("utf-8", { fatal: true, ignoreBOM: true })
-    : undefined;
+  const strictUtf8 =
+    invalidMarker !== undefined && view === "utf8"
+      ? new TextDecoder("utf-8", { fatal: true, ignoreBOM: true })
+      : undefined;
   const invalidByteStarts = new Set<number>();
   let text = "";
   const boundaries = [0];
@@ -104,19 +109,28 @@ export function display(bytes: Uint8Array, view: ViewType, invalidMarker?: strin
   const mapped = [boundaries[0]!];
   const invalidOffsets: number[] = [];
   for (let c = 0; c < text.length; c++) {
-    if (invalidByteStarts.has(boundaries[c]!)) invalidOffsets.push(normalized.length);
+    if (invalidByteStarts.has(boundaries[c]!))
+      invalidOffsets.push(normalized.length);
     if (text[c] === "\r") {
       if (text[c + 1] === "\n") c++;
       normalized += "\n";
     } else normalized += text[c];
     mapped.push(boundaries[c + 1]!);
   }
-  return { text: normalized, boundaries: mapped, ...(strictUtf8 ? { invalidOffsets } : {}) };
+  return {
+    text: normalized,
+    boundaries: mapped,
+    ...(strictUtf8 ? { invalidOffsets } : {}),
+  };
 }
 export type Range = [number, number];
 
 // In canonical HEX, a byte starts at 3 * offset and occupies two digits.
-export function byteRangeToHex(start: number, end: number, hexLength: number): Range {
+export function byteRangeToHex(
+  start: number,
+  end: number,
+  hexLength: number,
+): Range {
   return [
     Math.min(hexLength, start * 3),
     Math.min(hexLength, start === end ? end * 3 : end * 3 - 1),
@@ -125,7 +139,8 @@ export function byteRangeToHex(start: number, end: number, hexLength: number): R
 
 // Map the selection in an editable HEX draft to the normalized HEX string.
 export function normalizeHexRange(text: string, [start, end]: Range): Range {
-  const digits = (offset: number) => text.slice(0, offset).replace(/\s/g, "").length;
+  const digits = (offset: number) =>
+    text.slice(0, offset).replace(/\s/g, "").length;
   const a = digits(start);
   const z = digits(end);
   const count = digits(text.length);
@@ -134,8 +149,10 @@ export function normalizeHexRange(text: string, [start, end]: Range): Range {
   const from = Math.min(length, digitPosition(a));
   if (start === end) {
     // Keep either side of an existing separator distinguishable.
-    const caret = a > 0 && a < count && a % 2 === 0 && !/\s/.test(text[start - 1]!)
-      ? from - 1 : from;
+    const caret =
+      a > 0 && a < count && a % 2 === 0 && !/\s/.test(text[start - 1]!)
+        ? from - 1
+        : from;
     return [caret, caret];
   }
   if (a < z) return [from, digitPosition(z - 1) + 1];
@@ -158,7 +175,9 @@ export function characterRange(d: Display, start: number, end: number): Range {
   const z = after < 0 ? text.length : after;
   if (start === end) return [z, z];
 
-  const firstEnd = boundaries.findIndex((byte, i) => i > 0 && byte * 3 - 1 > start);
+  const firstEnd = boundaries.findIndex(
+    (byte, i) => i > 0 && byte * 3 - 1 > start,
+  );
   let a = firstEnd < 0 ? text.length : firstEnd - 1;
   // A surrogate pair can have two UTF-16 positions at the same byte offset.
   if (firstEnd >= 0) {

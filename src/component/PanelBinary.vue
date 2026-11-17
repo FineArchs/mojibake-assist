@@ -14,7 +14,7 @@
       :apply-selection="props.applySelection"
       :show-highlight="props.showHighlight"
       :invalid="props.invalid"
-@edit="(value, range) => emit('edit', value, range)"
+      @edit="(value, range) => emit('edit', value, range)"
       @selection-change="emit('selection-change', $event)"
     />
   </Panel>
@@ -27,13 +27,17 @@ import EditorHex from "./EditorHex.vue";
 import { selectedByteCount } from "../codec";
 import { positionLabel, type PanelEvents, type PanelProps } from "../panel";
 
-const props = defineProps<PanelProps & { byteCount: number; invalid: boolean }>();
+const props = defineProps<
+  PanelProps & { byteCount: number; invalid: boolean }
+>();
 const emit = defineEmits<PanelEvents>();
 const label = computed(() =>
-  props.invalid ? "—" : positionLabel(
-    Math.floor((props.selection[0] + 1) / 3),
-    selectedByteCount(props.selection),
-    "バイト",
-  ),
+  props.invalid
+    ? "—"
+    : positionLabel(
+        Math.floor((props.selection[0] + 1) / 3),
+        selectedByteCount(props.selection),
+        "バイト",
+      ),
 );
 </script>

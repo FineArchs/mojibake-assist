@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { byteRangeToHex, characterRange, display, encode, normalizeHexRange, parseHex, selectedByteCount } from "./codec";
+import {
+  byteRangeToHex,
+  characterRange,
+  display,
+  encode,
+  normalizeHexRange,
+  parseHex,
+  selectedByteCount,
+} from "./codec";
 
 describe("shared byte model", () => {
   it("encodes Japanese in both encodings", () => {

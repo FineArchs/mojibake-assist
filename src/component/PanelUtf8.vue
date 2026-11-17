@@ -10,7 +10,7 @@
       title="UTF-8"
       placeholder="ここにテキストを入力…"
       v-bind="props"
-@edit="(value, range, before) => emit('edit', value, range, before)"
+      @edit="(value, range, before) => emit('edit', value, range, before)"
       @selection-change="emit('selection-change', $event)"
     />
   </Panel>
@@ -24,7 +24,5 @@ import { textPositionLabel, type PanelEvents, type PanelProps } from "../panel";
 
 const props = defineProps<PanelProps>();
 const emit = defineEmits<PanelEvents>();
-const label = computed(() =>
-  textPositionLabel(props.value, props.selection),
-);
+const label = computed(() => textPositionLabel(props.value, props.selection));
 </script>

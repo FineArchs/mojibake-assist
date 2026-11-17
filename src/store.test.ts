@@ -24,7 +24,11 @@ describe("panel store", () => {
     store.update("utf8", "A", [1, 1]);
     store.update("hex", "4", [1, 1]);
 
-    expect(store.binary.value).toMatchObject({ value: "4", invalid: true, byteCount: 1 });
+    expect(store.binary.value).toMatchObject({
+      value: "4",
+      invalid: true,
+      byteCount: 1,
+    });
     expect(store.utf8.value.value).toBe("A");
     expect(store.error.value).not.toBe("");
 

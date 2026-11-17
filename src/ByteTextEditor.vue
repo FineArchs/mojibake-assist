@@ -14,6 +14,8 @@
     @blur="focused = false"
     @beforeinput="beforeInput"
     @input="reportEdit"
+    @pointerup="reportSelection"
+    @keyup="reportSelection"
     @compositionstart="startComposition"
     @compositionend="finishComposition"
     @dragstart.prevent
@@ -73,6 +75,16 @@ function paint(el: HTMLDivElement, value: string, markers: ByteMarker[], highlig
   el.replaceChildren(fragment);
 }
 
+function paintActiveSelection(el: HTMLElement, range?: Range) {
+  for (const [index, atom] of el.querySelectorAll(".byte-marker").entries()) {
+    const offset = props.markers?.[index]?.index;
+    atom.classList.toggle(
+      "active-selection",
+      !!range && offset !== undefined && range[0] <= offset && offset < range[1],
+    );
+  }
+}
+
 function reconcile(force = false) {
   const el = editor.value;
   if (!el || composing.value) return;
@@ -94,6 +106,7 @@ function reconcile(force = false) {
       last = wanted;
       if (actual?.[0] !== wanted[0] || actual[1] !== wanted[1])
         applyEditorSelection(el, wanted);
+      paintActiveSelection(el, wanted);
     }
   }
 }
@@ -107,6 +120,7 @@ function reportSelection() {
   const el = editor.value;
   if (!el || !focused.value || composing.value || before) return;
   const range = editorSelection(el);
+  paintActiveSelection(el, range);
   if (!range || (range[0] === last?.[0] && range[1] === last[1])) return;
   last = range;
   emit("selection-change", range);

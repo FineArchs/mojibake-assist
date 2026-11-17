@@ -251,3 +251,14 @@ textarea, .byte-text-editor {
   background: #eef5f3;
   white-space: nowrap;
 }
+
+/* The atom and the other panels use the same logical selection. */
+.byte-marker::selection,
+.byte-marker *::selection {
+  background: transparent;
+  color: inherit;
+}
+.byte-marker.active-selection {
+  background: #a2dbcc;
+  color: #163b35;
+}

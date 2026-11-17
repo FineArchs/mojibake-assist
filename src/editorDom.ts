@@ -13,10 +13,10 @@ export function editorSelection(editor: HTMLElement): OffsetRange | undefined {
   if (!selection?.rangeCount) return;
   const range = selection.getRangeAt(0);
   if (!editor.contains(range.startContainer) || !editor.contains(range.endContainer)) return;
-  function offset(node: Node, position: number) {
+  function offset(node: Node, position: number, includeAtom: boolean) {
     const atom = (node instanceof Element ? node : node.parentElement)?.closest("[data-byte-marker]");
     if (atom && editor.contains(atom)) {
-      position = Array.from(atom.parentNode!.childNodes).indexOf(atom);
+      position = Array.from(atom.parentNode!.childNodes).indexOf(atom) + (includeAtom ? 1 : 0);
       node = atom.parentNode!;
     }
     const prefix = editor.ownerDocument.createRange();
@@ -24,7 +24,13 @@ export function editorSelection(editor: HTMLElement): OffsetRange | undefined {
     prefix.setEnd(node, position);
     return editorText(prefix.cloneContents()).length;
   }
-  return [offset(range.startContainer, range.startOffset), offset(range.endContainer, range.endOffset)];
+  // Endpoints inside the visual label cover the whole atom, while a caret
+  // remains collapsed. This also handles right-to-left drag selections.
+  const start = offset(range.startContainer, range.startOffset, false);
+  const end = range.collapsed
+    ? start
+    : offset(range.endContainer, range.endOffset, true);
+  return [start, end];
 }
 
 export function applyEditorSelection(editor: HTMLElement, [start, end]: OffsetRange) {

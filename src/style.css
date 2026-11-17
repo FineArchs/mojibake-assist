@@ -266,17 +266,24 @@ textarea::selection,
 }
 
 .panel-foot {
+  position: relative;
   padding: 8px 0;
   display: flex;
   justify-content: space-between;
   font-size: 10px;
   color: #546e68;
 }
-.error {
-  padding: 12px;
+.panel-foot.has-error > :not(.panel-error) {
+  visibility: hidden;
+}
+.panel-error {
+  position: absolute;
+  inset: 0;
+  align-content: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   color: #a0442d;
-  background: #fff0e8;
-  font-size: 12px;
 }
 
 footer {

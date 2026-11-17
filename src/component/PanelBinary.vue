@@ -5,6 +5,7 @@
     subtitle="16進数"
     :count-label="`${props.byteCount} bytes`"
     :position-label="label"
+    :error="props.error"
   >
     <EditorHex
       title="Binary"
@@ -28,7 +29,7 @@ import { selectedByteCount } from "../codec";
 import { positionLabel, type PanelEvents, type PanelProps } from "../panel";
 
 const props = defineProps<
-  PanelProps & { byteCount: number; invalid: boolean }
+  PanelProps & { byteCount: number; invalid: boolean; error: string }
 >();
 const emit = defineEmits<PanelEvents>();
 const label = computed(() =>

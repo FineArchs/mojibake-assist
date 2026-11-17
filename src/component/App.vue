@@ -35,6 +35,7 @@
         />
         <PanelBinary
           v-bind="binary"
+          :error="error"
           @edit="(value, range) => update('hex', value, range)"
           @selection-change="select('hex', $event)"
         />
@@ -44,9 +45,6 @@
           @selection-change="select('utf8', $event)"
         />
       </section>
-      <div v-if="error" class="error" role="alert">
-        {{ error }} 他のビューは最後に確定したバイト列を表示しています。
-      </div>
     </main>
     <footer>
       <span>Mojibake Assist</span>

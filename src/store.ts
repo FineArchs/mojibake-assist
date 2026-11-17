@@ -46,7 +46,7 @@ export function createPanelStore() {
   );
 
   const displays = computed(() => ({
-    sjis: shiftJisDisplay(bytes.value),
+    sjis: shiftJisDisplay(bytes.value, true),
     hex: display(bytes.value, "hex"),
     utf8: display(bytes.value, "utf8", "\uFFFC"),
   }));
@@ -128,11 +128,23 @@ export function createPanelStore() {
     selected.value = [0, 0];
   }
 
+  const markers = computed(() => {
+    function forView(id: "sjis" | "utf8") {
+      const { boundaries, invalidOffsets } = displays.value[id];
+      return (invalidOffsets ?? []).map(index => ({
+        index,
+        hex: display(bytes.value.subarray(boundaries[index], boundaries[index + 1]), "hex").text,
+      }));
+    }
+    return { sjis: forView("sjis"), utf8: forView("utf8") };
+  });
+
   function panelState(id: ViewType) {
     return computed(() => ({
       value: id === "hex"
         ? pendingHex.value ?? displays.value.hex.text
         : displays.value[id].text,
+      markers: id === "hex" ? undefined : markers.value[id],
       selection: characterRange(displays.value[id], ...selected.value),
       applySelection: pendingHex.value === null && selectionSource.value !== id,
       showHighlight: showHighlight.value,

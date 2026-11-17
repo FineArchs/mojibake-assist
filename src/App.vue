@@ -46,7 +46,8 @@
 import ShiftJisPanel from "./ShiftJisPanel.vue";
 import BinaryPanel from "./BinaryPanel.vue";
 import Utf8Panel from "./Utf8Panel.vue";
-import { display, parseHex, type Range, type ViewType } from "./codec";
+import { display, encode, parseHex, type Range, type ViewType } from "./codec";
+import { editorSelection } from "./editorDom";
 import { byteClipboardType } from "./byteEditor";
 import { createPanelStore } from "./store";
 
@@ -54,12 +55,15 @@ const { shiftJis, binary, utf8, error, select, update, sample, clear, copyTextBy
   createPanelStore();
 function clipboardTarget(event: Event) {
   const el = event.target;
-  if (!(el instanceof HTMLTextAreaElement)) return;
+  if (!(el instanceof HTMLElement)) return;
   const panel = el.closest(".panel");
   const id: ViewType | undefined = panel?.classList.contains("sjis") ? "sjis"
     : panel?.classList.contains("hex") ? "hex"
     : panel?.classList.contains("utf8") ? "utf8" : undefined;
-  return id ? { id, range: [el.selectionStart, el.selectionEnd] as Range } : undefined;
+  const range: Range | undefined = el instanceof HTMLTextAreaElement
+    ? [el.selectionStart, el.selectionEnd]
+    : el.hasAttribute("data-byte-editor") ? editorSelection(el) : undefined;
+  return id && range ? { id, range } : undefined;
 }
 
 function copy(event: ClipboardEvent) {
@@ -81,13 +85,18 @@ function cut(event: ClipboardEvent) {
 function paste(event: ClipboardEvent) {
   const target = clipboardTarget(event);
   const raw = event.clipboardData?.getData(byteClipboardType);
-  if (!target || !raw) return;
-  const bytes = parseHex(raw);
-  if (bytes?.length && pasteBytes(target.id, target.range, bytes)) event.preventDefault();
+  if (!target || !event.clipboardData) return;
+  const bytes = raw ? parseHex(raw) : null;
+  if (bytes?.length && pasteBytes(target.id, target.range, bytes)) {
+    event.preventDefault();
+  } else if (target.id !== "hex") {
+    event.preventDefault();
+    const text = event.clipboardData.getData("text/plain").replace(/\r\n?/g, "\n");
+    if (text) pasteBytes(target.id, target.range, encode(text, target.id));
+  }
 }
 function isTextEditor(event: Event) {
-  const id = clipboardTarget(event)?.id;
-  return id === "sjis" || id === "utf8";
+  return event.target instanceof HTMLElement && event.target.hasAttribute("data-byte-editor");
 }
 
 function historyKey(event: KeyboardEvent) {

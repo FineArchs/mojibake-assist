@@ -132,7 +132,7 @@ h2 {
   color: #829390;
   margin: 9px 0 20px;
 }
-textarea {
+textarea, .byte-text-editor {
   display: block;
   width: 100%;
   min-height: 310px;
@@ -160,12 +160,12 @@ textarea {
 textarea::placeholder {
   color: #b2c0bd;
 }
-textarea:focus {
+textarea:focus, .byte-text-editor:focus {
   border-color: #70b5a5;
   background: #fff;
   box-shadow: 0 0 0 3px #1683720b;
 }
-textarea::selection {
+textarea::selection, .byte-text-editor ::selection, .byte-text-editor::selection {
   background: #a2dbcc;
   color: #163b35;
 }
@@ -219,11 +219,35 @@ footer {
   background: #d7dadd;
   border-radius: 2px;
 }
-textarea {
+textarea, .byte-text-editor {
   position: relative;
 }
 .divider {
   width: 100%;
   height: 0;
   border-top: 1px solid #dce5e3;
+}
+
+.byte-text-editor {
+  overflow: auto;
+}
+.byte-text-editor[data-empty="true"]:not(:focus)::before {
+  content: attr(data-placeholder);
+  color: #b2c0bd;
+  pointer-events: none;
+}
+.byte-text-editor mark,
+.byte-marker.selected {
+  background: #d7dadd;
+  color: inherit;
+}
+.byte-marker {
+  display: inline-block;
+  padding: 0 .3em;
+  border: 1px solid #879e9b;
+  border-radius: .25em;
+  line-height: 1.2;
+  color: #2a5450;
+  background: #eef5f3;
+  white-space: nowrap;
 }

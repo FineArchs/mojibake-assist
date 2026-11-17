@@ -6,7 +6,19 @@
       </div>
     </div>
     <p class="subtitle">{{ subtitle }}</p>
-    <div class="editor">
+    <ByteTextEditor
+      v-if="kind !== 'hex'"
+      :value="value"
+      :selection="selection"
+      :markers="markers"
+      :apply-selection="applySelection"
+      :show-highlight="showHighlight"
+      :title="title"
+      :placeholder="placeholder"
+      @edit="(value, range, before) => emit('edit', value, range, before)"
+      @selection-change="emit('selection-change', $event)"
+    />
+    <div v-else class="editor">
       <pre
         v-if="!focused && showHighlight"
         ref="mirror"
@@ -23,13 +35,12 @@
         @focus="focused = true"
         @blur="blur"
         @scroll="syncScroll"
-        @beforeinput="captureEdit"
         @input="reportEdit"
         @select="reportSelection"
         @keyup="reportSelection"
         @pointerup="reportSelection"
         @selectionchange="reportSelection"
-        @compositionstart="startComposition"
+        @compositionstart="composing = true"
         @compositionend="finishComposition"
       ></textarea>
     </div>
@@ -42,6 +53,7 @@
 
 <script setup lang="ts">
 import { nextTick, ref, watchEffect } from "vue";
+import ByteTextEditor from "./ByteTextEditor.vue";
 import type { Range, ViewType } from "./codec";
 import type { PanelEvents, PanelProps } from "./panel";
 
@@ -60,7 +72,6 @@ const textarea = ref<HTMLTextAreaElement | null>(null);
 const mirror = ref<HTMLPreElement | null>(null);
 const focused = ref(false);
 let composing = false;
-let beforeEdit: Range | undefined;
 let lastSelection: Range | undefined;
 
 function readSelection(el: HTMLTextAreaElement): Range {
@@ -98,24 +109,11 @@ function reportSelection() {
   emit("selection-change", range);
 }
 
-function captureEdit() {
-  if (props.kind !== "hex" && textarea.value && !composing) {
-    beforeEdit = readSelection(textarea.value);
-  }
-}
-
-function startComposition() {
-  captureEdit();
-  composing = true;
-}
-
 function reportEdit() {
   const el = textarea.value;
   if (!el || composing) return;
   lastSelection = readSelection(el);
-  const before = beforeEdit;
-  beforeEdit = undefined;
-  emit("edit", el.value, lastSelection, before);
+  emit("edit", el.value, lastSelection);
 }
 
 function finishComposition() {

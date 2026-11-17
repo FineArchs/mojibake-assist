@@ -3,10 +3,11 @@ import { encode, type Display, type Range } from "./codec";
 const marker = "\uFFFD";
 export const byteClipboardType = "application/x-mojibake-assist-bytes";
 
-export function shiftJisDisplay(bytes: Uint8Array): Display {
+export function shiftJisDisplay(bytes: Uint8Array, markInvalid = false): Display {
   const strict = new TextDecoder("shift-jis", { fatal: true });
   let text = "";
   const boundaries = [0];
+  const invalidOffsets: number[] = [];
   for (let i = 0; i < bytes.length;) {
     const b = bytes[i]!;
     const next = bytes[i + 1];
@@ -18,6 +19,7 @@ export function shiftJisDisplay(bytes: Uint8Array): Display {
     } catch {
       // A failed lead followed by ASCII leaves the ASCII byte for the next step.
       if (size === 2 && next! <= 0x7f) size = 1;
+      invalidOffsets.push(text.length);
       piece = marker;
     }
     if (b === 0x0d) {
@@ -30,7 +32,7 @@ export function shiftJisDisplay(bytes: Uint8Array): Display {
     }
     i += size;
   }
-  return { text, boundaries };
+  return { text, boundaries, ...(markInvalid ? { invalidOffsets } : {}) };
 }
 
 export function spliceBytes(bytes: Uint8Array, [start, end]: Range, inserted: Uint8Array) {

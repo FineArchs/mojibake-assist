@@ -4,6 +4,7 @@ export interface Display {
   text: string;
   boundaries: number[];
   hex?: boolean;
+  invalidOffsets?: number[];
 }
 export function encode(text: string, view: ViewType): Uint8Array {
   if (view === "utf8") return new TextEncoder().encode(text);
@@ -37,6 +38,7 @@ export function display(bytes: Uint8Array, view: ViewType, invalidMarker?: strin
   const strictUtf8 = invalidMarker !== undefined && view === "utf8"
     ? new TextDecoder("utf-8", { fatal: true, ignoreBOM: true })
     : undefined;
+  const invalidByteStarts = new Set<number>();
   let text = "";
   const boundaries = [0];
   for (let i = 0; i < bytes.length;) {
@@ -87,6 +89,7 @@ export function display(bytes: Uint8Array, view: ViewType, invalidMarker?: strin
       try {
         chunk = strictUtf8.decode(segment);
       } catch {
+        invalidByteStarts.add(i);
         chunk = invalidMarker!;
       }
     } else {
@@ -99,14 +102,16 @@ export function display(bytes: Uint8Array, view: ViewType, invalidMarker?: strin
   }
   let normalized = "";
   const mapped = [boundaries[0]!];
+  const invalidOffsets: number[] = [];
   for (let c = 0; c < text.length; c++) {
+    if (invalidByteStarts.has(boundaries[c]!)) invalidOffsets.push(normalized.length);
     if (text[c] === "\r") {
       if (text[c + 1] === "\n") c++;
       normalized += "\n";
     } else normalized += text[c];
     mapped.push(boundaries[c + 1]!);
   }
-  return { text: normalized, boundaries: mapped };
+  return { text: normalized, boundaries: mapped, ...(strictUtf8 ? { invalidOffsets } : {}) };
 }
 export type Range = [number, number];
 

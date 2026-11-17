@@ -1,6 +1,9 @@
 import type { Range } from "./codec";
 
+export type ByteMarker = { index: number; hex: string };
+
 export interface PanelProps {
+  markers?: ByteMarker[];
   value: string;
   selection: Range;
   applySelection: boolean;

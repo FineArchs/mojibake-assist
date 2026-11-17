@@ -6,6 +6,7 @@ describe("UTF-8 byte editing", () => {
     const store = createPanelStore();
     store.update("hex", "41 E3 81", [8, 8]);
     expect(store.utf8.value.value).toBe("A\uFFFC");
+    expect(store.utf8.value.markers).toEqual([{ index: 1, hex: "E3 81" }]);
     store.update("utf8", "B\uFFFC", [1, 1], [0, 1]);
     expect(store.binary.value.value).toBe("42 E3 81");
     store.select("utf8", [1, 2]);
@@ -25,6 +26,7 @@ describe("UTF-8 byte editing", () => {
     const store = createPanelStore();
     store.update("hex", "EF BF BD FF F0 9F 98 80", [23, 23]);
     expect(store.utf8.value.value).toBe("�\uFFFC😀");
+    expect(store.utf8.value.markers).toEqual([{ index: 1, hex: "FF" }]);
     store.update("utf8", "�\uFFFC😁", [4, 4], [2, 4]);
     expect(store.binary.value.value).toBe("EF BF BD FF F0 9F 98 81");
   });

@@ -62,7 +62,7 @@ export function createPanelStore() {
   }
 
   function sample() {
-    bytes.value = encode("こんにちは、世界！\n文字化けを、読み解こう。", "utf8");
+    bytes.value = encode("文字化けのテストです。", "utf8");
     pendingHex.value = null;
     selected.value = [0, 0];
     selectionSource.value = null;

@@ -172,15 +172,13 @@ main {
 .workspace {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   border: 1px solid var(--panel-border);
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 7px 25px var(--shadow);
   background: var(--surface);
-  @media (max-width: 900px) {
-    grid-template-columns: 1fr;
-  }
 }
 .panel {
   min-width: 0;
@@ -188,12 +186,24 @@ main {
   display: flex;
   flex-direction: column;
 }
-.panel + .panel {
-  border-left: 1px solid var(--divider);
-  @media (max-width: 900px) {
-    border-left: 0;
-    border-top: 1px solid var(--divider);
-  }
+.panel ~ .panel {
+  border-inline-start: 1px solid var(--divider);
+}
+:root[data-arrangement^="vertical"] .workspace {
+  grid-auto-flow: row;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: minmax(min-content, 1fr);
+}
+:root[data-arrangement^="vertical"] .panel ~ .panel {
+  border-inline-start: 0;
+  border-block-start: 1px solid var(--divider);
+}
+:root[data-binary="hidden"] .workspace > .hex {
+  display: none;
+}
+:root[data-arrangement="vertical-overflow"] .workspace :is(textarea, .byte-text-editor, .selection-mirror) {
+  white-space: pre;
+  overflow-wrap: normal;
 }
 .hex {
   background: var(--hex-surface);

@@ -27,7 +27,7 @@
         />
         <Utf8Panel
           v-bind="utf8"
-          @edit="(value, range) => update('utf8', value, range)"
+          @edit="(value, range, before) => update('utf8', value, range, before)"
           @selection-change="select('utf8', $event)"
         />
       </section>
@@ -47,10 +47,10 @@ import ShiftJisPanel from "./ShiftJisPanel.vue";
 import BinaryPanel from "./BinaryPanel.vue";
 import Utf8Panel from "./Utf8Panel.vue";
 import { display, parseHex, type Range, type ViewType } from "./codec";
-import { byteClipboardType } from "./sjisEditor";
+import { byteClipboardType } from "./byteEditor";
 import { createPanelStore } from "./store";
 
-const { shiftJis, binary, utf8, error, select, update, sample, clear, copyShiftJis, pasteBytes, shiftJisHistory } =
+const { shiftJis, binary, utf8, error, select, update, sample, clear, copyTextBytes, pasteBytes, textHistory } =
   createPanelStore();
 function clipboardTarget(event: Event) {
   const el = event.target;
@@ -65,17 +65,17 @@ function clipboardTarget(event: Event) {
 function copy(event: ClipboardEvent) {
   const target = clipboardTarget(event);
   const clipboard = event.clipboardData;
-  if (target?.id !== "sjis" || !clipboard || target.range[0] === target.range[1]) return;
-  const bytes = copyShiftJis(target.range);
-  clipboard.setData("text/plain", new TextDecoder("shift-jis", { ignoreBOM: true }).decode(bytes));
+  if (!target || target.id === "hex" || !clipboard || target.range[0] === target.range[1]) return;
+  const bytes = copyTextBytes(target.id, target.range);
+  clipboard.setData("text/plain", new TextDecoder(target.id === "sjis" ? "shift-jis" : "utf-8", { ignoreBOM: true }).decode(bytes));
   clipboard.setData(byteClipboardType, display(bytes, "hex").text);
   event.preventDefault();
-  return target.range;
+  return target;
 }
 
 function cut(event: ClipboardEvent) {
-  const range = copy(event);
-  if (range) pasteBytes("sjis", range, new Uint8Array());
+  const target = copy(event);
+  if (target) pasteBytes(target.id, target.range, new Uint8Array());
 }
 
 function paste(event: ClipboardEvent) {
@@ -85,19 +85,24 @@ function paste(event: ClipboardEvent) {
   const bytes = parseHex(raw);
   if (bytes?.length && pasteBytes(target.id, target.range, bytes)) event.preventDefault();
 }
+function isTextEditor(event: Event) {
+  const id = clipboardTarget(event)?.id;
+  return id === "sjis" || id === "utf8";
+}
+
 function historyKey(event: KeyboardEvent) {
   if (event.isComposing || !(event.ctrlKey || event.metaKey) || event.altKey ||
-      clipboardTarget(event)?.id !== "sjis") return;
+      !isTextEditor(event)) return;
   const key = event.key.toLowerCase();
   if (key !== "z" && key !== "y") return;
   event.preventDefault();
-  shiftJisHistory(key === "y" || event.shiftKey ? "redo" : "undo");
+  textHistory(key === "y" || event.shiftKey ? "redo" : "undo");
 }
 
 function historyInput(event: InputEvent) {
-  if (clipboardTarget(event)?.id !== "sjis" || !event.cancelable) return;
+  if (!isTextEditor(event) || !event.cancelable) return;
   if (event.inputType !== "historyUndo" && event.inputType !== "historyRedo") return;
   event.preventDefault();
-  shiftJisHistory(event.inputType === "historyUndo" ? "undo" : "redo");
+  textHistory(event.inputType === "historyUndo" ? "undo" : "redo");
 }
 </script>

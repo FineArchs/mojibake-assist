@@ -99,7 +99,7 @@ function reportSelection() {
 }
 
 function captureEdit() {
-  if (props.kind === "sjis" && textarea.value && !composing) {
+  if (props.kind !== "hex" && textarea.value && !composing) {
     beforeEdit = readSelection(textarea.value);
   }
 }

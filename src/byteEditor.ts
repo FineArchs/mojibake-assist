@@ -41,10 +41,11 @@ export function spliceBytes(bytes: Uint8Array, [start, end]: Range, inserted: Ui
   return result;
 }
 
-export function shiftJisEdit(
+export function textByteEdit(
   previous: Display,
   value: string,
   caret: number,
+  encoding: "sjis" | "utf8",
   before?: Range,
 ) {
   const old = previous.text;
@@ -59,13 +60,17 @@ export function shiftJisEdit(
   const maxStart = Math.min(old.length - suffix, value.length - suffix, caret,
     before?.[0] ?? old.length);
   while (start < maxStart && old[start] === value[start]) start++;
+  // A shared surrogate is not an independently editable part of a character.
+  while (start > 0 && previous.boundaries[start] === previous.boundaries[start - 1]) start--;
+  while (suffix > 0 &&
+    previous.boundaries[old.length - suffix] === previous.boundaries[old.length - suffix - 1]) suffix--;
   const end = old.length - suffix;
-  const inserted = encode(value.slice(start, value.length - suffix), "sjis");
+  const inserted = encode(value.slice(start, value.length - suffix), encoding);
   const offset = previous.boundaries[start]!;
   return {
     range: [offset, previous.boundaries[end]!] as Range,
     inserted,
-    caret: offset + encode(value.slice(start, caret), "sjis").length,
+    caret: offset + encode(value.slice(start, caret), encoding).length,
   };
 }
 

@@ -20,7 +20,7 @@ export function parseHex(text: string): Uint8Array | null {
   if (!/^(?:[0-9a-fA-F]{2})*$/.test(compact)) return null;
   return Uint8Array.from(compact.match(/../g) ?? [], (h) => parseInt(h, 16));
 }
-export function display(bytes: Uint8Array, view: ViewType): Display {
+export function display(bytes: Uint8Array, view: ViewType, invalidMarker?: string): Display {
   if (view === "hex") {
     const text = Array.from(bytes, (b) =>
       b.toString(16).padStart(2, "0").toUpperCase(),
@@ -34,6 +34,9 @@ export function display(bytes: Uint8Array, view: ViewType): Display {
   const decoder = new TextDecoder(view === "sjis" ? "shift-jis" : "utf-8", {
     ignoreBOM: true,
   });
+  const strictUtf8 = invalidMarker !== undefined && view === "utf8"
+    ? new TextDecoder("utf-8", { fatal: true, ignoreBOM: true })
+    : undefined;
   let text = "";
   const boundaries = [0];
   for (let i = 0; i < bytes.length;) {
@@ -78,7 +81,17 @@ export function display(bytes: Uint8Array, view: ViewType): Display {
         size = valid ? Math.min(n, bytes.length - i) : j;
       }
     }
-    const chunk = decoder.decode(bytes.slice(i, i + size));
+    const segment = bytes.subarray(i, i + size);
+    let chunk: string;
+    if (strictUtf8) {
+      try {
+        chunk = strictUtf8.decode(segment);
+      } catch {
+        chunk = invalidMarker!;
+      }
+    } else {
+      chunk = decoder.decode(segment);
+    }
     text += chunk;
     for (let k = 1; k <= chunk.length; k++)
       boundaries.push(k === chunk.length ? i + size : i);

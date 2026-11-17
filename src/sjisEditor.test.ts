@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { shiftJisDisplay } from "./sjisEditor";
+import { shiftJisDisplay } from "./byteEditor";
 import { createPanelStore } from "./store";
 
 describe("Shift-JIS byte editing", () => {
@@ -18,12 +18,12 @@ describe("Shift-JIS byte editing", () => {
     expect(store.shiftJis.value.value).toBe("�A�");
     store.update("sjis", "�B�", [2, 2], [1, 2]);
     expect(store.binary.value.value).toBe("FF 42 82");
-    const payload = store.copyShiftJis([2, 3]);
+    const payload = store.copyTextBytes("sjis", [2, 3]);
     store.pasteBytes("sjis", [2, 3], new Uint8Array());
     expect(store.binary.value.value).toBe("FF 42");
-    store.shiftJisHistory("undo");
+    store.textHistory("undo");
     expect(store.binary.value.value).toBe("FF 42 82");
-    store.shiftJisHistory("redo");
+    store.textHistory("redo");
     expect(store.binary.value.value).toBe("FF 42");
     store.pasteBytes("utf8", [0, 0], payload);
     expect(store.binary.value.value).toBe("82 FF 42");

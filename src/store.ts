@@ -10,7 +10,7 @@ import {
   type ViewType,
 } from "./codec";
 
-import { shiftJisDisplay, shiftJisEdit, spliceBytes } from "./sjisEditor";
+import { shiftJisDisplay, textByteEdit, spliceBytes } from "./byteEditor";
 
 export function createPanelStore() {
   const bytes = ref<Uint8Array>(new Uint8Array());
@@ -30,7 +30,7 @@ export function createPanelStore() {
   function resetHistory() {
     undo.length = redo.length = 0;
   }
-  function shiftJisHistory(direction: "undo" | "redo") {
+  function textHistory(direction: "undo" | "redo") {
     const [from, to] = direction === "undo" ? [undo, redo] : [redo, undo];
     const entry = from.pop();
     if (!entry) return;
@@ -48,7 +48,7 @@ export function createPanelStore() {
   const displays = computed(() => ({
     sjis: shiftJisDisplay(bytes.value),
     hex: display(bytes.value, "hex"),
-    utf8: display(bytes.value, "utf8"),
+    utf8: display(bytes.value, "utf8", "\uFFFC"),
   }));
 
   function select(id: ViewType, [start, end]: Range) {
@@ -61,32 +61,23 @@ export function createPanelStore() {
   }
 
   function update(id: ViewType, value: string, [a, b]: Range, before?: Range) {
-    if (id === "sjis") {
-      const previous = displays.value.sjis;
+    if (id !== "hex") {
+      const previous = displays.value[id];
       if (!before && value === previous.text) return;
-      const edit = shiftJisEdit(previous, value, b, before);
+      const edit = textByteEdit(previous, value, b, id, before);
       replaceBytes(edit.range, edit.inserted, edit.caret, true);
       return;
     }
-    if (id === "hex") {
-      const parsed = parseHex(value);
-      if (!parsed) {
-        pendingHex.value = value;
-
-        return;
-      }
-      bytes.value = parsed;
-    } else bytes.value = encode(value, id);
+    const parsed = parseHex(value);
+    if (!parsed) {
+      pendingHex.value = value;
+      return;
+    }
+    bytes.value = parsed;
     resetHistory();
     pendingHex.value = null;
     selectionSource.value = null;
-    selected.value = id === "hex"
-      ? normalizeHexRange(value, [a, b])
-      : byteRangeToHex(
-          encode(value.slice(0, a), id).length,
-          encode(value.slice(0, b), id).length,
-          displays.value.hex.text.length,
-        );
+    selected.value = normalizeHexRange(value, [a, b]);
   }
 
   function replaceBytes(range: Range, inserted: Uint8Array, caret = range[0] + inserted.length, track = false) {
@@ -100,8 +91,8 @@ export function createPanelStore() {
     selected.value = byteRangeToHex(caret, caret, displays.value.hex.text.length);
   }
 
-  function copyShiftJis(range: Range) {
-    const { boundaries } = displays.value.sjis;
+  function copyTextBytes(id: "sjis" | "utf8", range: Range) {
+    const { boundaries } = displays.value[id];
     return bytes.value.slice(boundaries[range[0]]!, boundaries[range[1]]!);
   }
 
@@ -117,7 +108,7 @@ export function createPanelStore() {
       return true;
     }
     const { boundaries } = displays.value[id];
-    replaceBytes([boundaries[range[0]]!, boundaries[range[1]]!], inserted, undefined, id === "sjis");
+    replaceBytes([boundaries[range[0]]!, boundaries[range[1]]!], inserted, undefined, true);
     return true;
   }
 
@@ -157,5 +148,5 @@ export function createPanelStore() {
     invalid: pendingHex.value !== null,
   }));
 
-  return { shiftJis, binary, utf8, error, select, update, sample, clear, copyShiftJis, pasteBytes, shiftJisHistory };
+  return { shiftJis, binary, utf8, error, select, update, sample, clear, copyTextBytes, pasteBytes, textHistory };
 }

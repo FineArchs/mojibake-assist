@@ -1,8 +1,8 @@
 <template>
   <Panel
     kind="sjis"
-    title="Shift-JIS"
-    subtitle="文字化けしたテキスト（枠内は不正なバイト列）"
+    title="文字化けしたテキスト"
+    subtitle="Shift-JIS"
     :count-label="`${Array.from(props.value).length}文字`"
     :position-label="label"
   >

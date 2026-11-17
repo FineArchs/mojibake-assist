@@ -1,11 +1,9 @@
 <template>
   <article :class="['panel', kind]">
     <div class="panel-head">
-      <div class="panel-title">
-        <h2>{{ title }}</h2>
-      </div>
+      <h2 class="panel-title">{{ title }}</h2>
+      <div class="subtitle">{{ subtitle }}</div>
     </div>
-    <p class="subtitle">{{ subtitle }}</p>
     <slot />
     <div class="panel-foot">
       <span>{{ countLabel }}</span>

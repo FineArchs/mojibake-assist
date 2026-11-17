@@ -1,8 +1,8 @@
 <template>
   <Panel
     kind="hex"
-    title="Binary"
-    subtitle="バイト列 · 16進数"
+    title="バイト列"
+    subtitle="16進数"
     :count-label="`${props.byteCount} bytes`"
     :position-label="label"
   >

@@ -12,13 +12,13 @@
         文字化けアシスト
       </a>
       <div class="toolbar">
-        <div class="actions">
-          <button @click="sample">サンプルを試す <span>↓</span></button
-          ><button @click="clear">クリア</button>
-        </div>
+        <button>レイアウト</button>
       </div>
     </header>
-    <div class="divider"></div>
+    <div class="actions">
+        <button @click="sample">サンプルを試す↓</button
+        ><button @click="clear">クリア</button>
+    </div>
     <main>
       <section
         class="workspace"
@@ -48,7 +48,6 @@
         {{ error }} 他のビューは最後に確定したバイト列を表示しています。
       </div>
     </main>
-    <div class="divider"></div>
     <footer>
       <span>Mojibake Assist</span>
     </footer>

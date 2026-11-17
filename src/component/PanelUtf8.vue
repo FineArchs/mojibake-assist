@@ -1,8 +1,8 @@
 <template>
   <Panel
     kind="utf8"
-    title="UTF-8"
-    subtitle="復元後のテキスト（枠内は不正なバイト列）"
+    title="復元後のテキスト"
+    subtitle="UTF-8"
     :count-label="`${Array.from(props.value).length}文字`"
     :position-label="label"
   >

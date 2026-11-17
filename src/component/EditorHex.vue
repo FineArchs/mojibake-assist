@@ -1,70 +1,41 @@
 <template>
-  <article :class="['panel', kind]">
-    <div class="panel-head">
-      <div class="panel-title">
-        <h2>{{ title }}</h2>
-      </div>
-    </div>
-    <p class="subtitle">{{ subtitle }}</p>
-    <ByteTextEditor
-      v-if="kind !== 'hex'"
+  <div class="editor">
+    <pre
+      v-if="!focused && showHighlight"
+      ref="mirror"
+      class="selection-mirror"
+      aria-hidden="true"
+    ><span>{{ value.slice(0, selection[0]) }}</span><mark>{{ value.slice(...selection) }}</mark><span>{{ value.slice(selection[1]) }}</span></pre>
+    <textarea
+      ref="textarea"
       :value="value"
-      :selection="selection"
-      :markers="markers"
-      :apply-selection="applySelection"
-      :show-highlight="showHighlight"
-      :title="title"
+      :aria-label="title"
       :placeholder="placeholder"
-      @edit="(value, range, before) => emit('edit', value, range, before)"
-      @selection-change="emit('selection-change', $event)"
-    />
-    <div v-else class="editor">
-      <pre
-        v-if="!focused && showHighlight"
-        ref="mirror"
-        class="selection-mirror"
-        aria-hidden="true"
-      ><span>{{ value.slice(0, selection[0]) }}</span><mark>{{ value.slice(...selection) }}</mark><span>{{ value.slice(selection[1]) }}</span></pre>
-      <textarea
-        ref="textarea"
-        :value="value"
-        :aria-label="title"
-        :placeholder="placeholder"
-        :class="{ invalid }"
-        spellcheck="false"
-        @focus="focused = true"
-        @blur="blur"
-        @scroll="syncScroll"
-        @input="reportEdit"
-        @select="reportSelection"
-        @keyup="reportSelection"
-        @pointerup="reportSelection"
-        @selectionchange="reportSelection"
-        @compositionstart="composing = true"
-        @compositionend="finishComposition"
-      ></textarea>
-    </div>
-    <div class="panel-foot">
-      <span>{{ countLabel }}</span>
-      <span>{{ positionLabel }}</span>
-    </div>
-  </article>
+      :class="{ invalid }"
+      spellcheck="false"
+      @focus="focused = true"
+      @blur="blur"
+      @scroll="syncScroll"
+      @input="reportEdit"
+      @select="reportSelection"
+      @keyup="reportSelection"
+      @pointerup="reportSelection"
+      @selectionchange="reportSelection"
+      @compositionstart="composing = true"
+      @compositionend="finishComposition"
+    ></textarea>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { nextTick, ref, watchEffect } from "vue";
-import ByteTextEditor from "./ByteTextEditor.vue";
-import type { Range, ViewType } from "../codec";
+import type { Range } from "../codec";
 import type { PanelEvents, PanelProps } from "../panel";
 
-const props = defineProps<PanelProps & {
-  kind: ViewType;
+const props = defineProps<Pick<PanelProps, "value" | "selection" | "applySelection" | "showHighlight"> & {
   title: string;
-  subtitle: string;
   placeholder: string;
-  countLabel: string;
-  positionLabel: string;
-  invalid?: boolean;
+  invalid: boolean;
 }>();
 const emit = defineEmits<PanelEvents>();
 

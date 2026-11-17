@@ -8,7 +8,7 @@ export interface PanelProps {
 }
 
 export type PanelEvents = {
-  edit: [value: string, selection: Range];
+  edit: [value: string, selection: Range, before?: Range];
   "selection-change": [selection: Range];
 };
 

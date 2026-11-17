@@ -23,12 +23,13 @@
         @focus="focused = true"
         @blur="blur"
         @scroll="syncScroll"
+        @beforeinput="captureEdit"
         @input="reportEdit"
         @select="reportSelection"
         @keyup="reportSelection"
         @pointerup="reportSelection"
         @selectionchange="reportSelection"
-        @compositionstart="composing = true"
+        @compositionstart="startComposition"
         @compositionend="finishComposition"
       ></textarea>
     </div>
@@ -59,6 +60,7 @@ const textarea = ref<HTMLTextAreaElement | null>(null);
 const mirror = ref<HTMLPreElement | null>(null);
 const focused = ref(false);
 let composing = false;
+let beforeEdit: Range | undefined;
 let lastSelection: Range | undefined;
 
 function readSelection(el: HTMLTextAreaElement): Range {
@@ -96,11 +98,24 @@ function reportSelection() {
   emit("selection-change", range);
 }
 
+function captureEdit() {
+  if (props.kind === "sjis" && textarea.value && !composing) {
+    beforeEdit = readSelection(textarea.value);
+  }
+}
+
+function startComposition() {
+  captureEdit();
+  composing = true;
+}
+
 function reportEdit() {
   const el = textarea.value;
   if (!el || composing) return;
   lastSelection = readSelection(el);
-  emit("edit", el.value, lastSelection);
+  const before = beforeEdit;
+  beforeEdit = undefined;
+  emit("edit", el.value, lastSelection, before);
 }
 
 function finishComposition() {

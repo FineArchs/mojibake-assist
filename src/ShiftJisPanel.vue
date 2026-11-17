@@ -3,11 +3,11 @@
     v-bind="props"
     kind="sjis"
     title="Shift-JIS"
-    subtitle="文字化けしたテキスト"
+    subtitle="文字化けしたテキスト（�は不正なバイト列）"
     placeholder="ここにテキストを入力…"
     :count-label="`${Array.from(props.value).length}文字`"
     :position-label="label"
-    @edit="(value, range) => emit('edit', value, range)"
+    @edit="(value, range, before) => emit('edit', value, range, before)"
     @selection-change="emit('selection-change', $event)"
   />
 </template>

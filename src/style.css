@@ -1,11 +1,73 @@
 @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap");
 
 :root {
+  color-scheme: light;
+  --text: #233b42;
+  --page: #f4f7f7;
+  --surface: white;
+  --button-border: #d6e1e0;
+  --button-text: #426365;
+  --accent-surface: #e7f2ef;
+  --hover-border: #87bdb3;
+  --focus-ring: #168372;
+  --divider: #dce5e3;
+  --brand: #16383b;
+  --panel-border: #d5e1df;
+  --shadow: #254a4510;
+  --hex-surface: #f7faf9;
+  --subtitle: #829390;
+  --editor-text: #344f53;
+  --editor-focus: #70b5a5;
+  --editor-surface: #fff;
+  --editor-glow: #1683720b;
+  --invalid-border: #cf765c;
+  --placeholder: #b2c0bd;
+  --selection: #a2dbcc;
+  --selection-text: #163b35;
+  --selection-inactive: #d7dadd;
+  --marker-border: #879e9b;
+  --marker-text: #2a5450;
+  --marker-surface: #eef5f3;
+  --foot-text: #546e68;
+  --error: #a0442d;
+  --footer: #97aaa4;
   font-family: "Noto Sans JP", system-ui, sans-serif;
   --font-bytetext: "Consolas", "Noto Sans JP", monospace;
-  color: #233b42;
-  background: #f4f7f7;
+  color: var(--text);
+  background: var(--page);
   font-synthesis: none;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --text: #dcebe8;
+  --page: #101817;
+  --surface: #192523;
+  --button-border: #415953;
+  --button-text: #c4ded7;
+  --accent-surface: #223a34;
+  --hover-border: #73b2a2;
+  --focus-ring: #8bd6c1;
+  --divider: #344943;
+  --brand: #d8f3e9;
+  --panel-border: #3a504a;
+  --shadow: #0005;
+  --hex-surface: #1d2c29;
+  --subtitle: #a9bfba;
+  --editor-text: #cfe4e0;
+  --editor-focus: #76bcac;
+  --editor-surface: #202f2c;
+  --editor-glow: #8bd6c124;
+  --invalid-border: #ea927a;
+  --placeholder: #a0b6b1;
+  --selection: #327568;
+  --selection-text: #fff;
+  --selection-inactive: #4b5453;
+  --marker-border: #70938b;
+  --marker-text: #bfe5dc;
+  --marker-surface: #2b443e;
+  --foot-text: #b2c8c3;
+  --error: #ffac95;
+  --footer: #acbfbb;
 }
 * {
   box-sizing: border-box;
@@ -14,20 +76,20 @@ body {
   margin: 0;
 }
 button {
-  background: white;
-  border: 1px solid #d6e1e0;
-  color: #426365;
+  background: var(--surface);
+  border: 1px solid var(--button-border);
+  color: var(--button-text);
   padding: 9px 15px;
   border-radius: 7px;
   font: inherit;
   font-size: 12px;
   cursor: pointer;
   &:hover {
-    background: #e7f2ef;
-    border-color: #87bdb3;
+    background: var(--accent-surface);
+    border-color: var(--hover-border);
   }
   &:focus-visible {
-    outline: 2px solid #168372;
+    outline: 2px solid var(--focus-ring);
     outline-offset: 3px;
   }
 }
@@ -35,7 +97,7 @@ button {
   flex: none;
   width: 100%;
   height: 0;
-  border-top: 1px solid #dce5e3;
+  border-top: 1px solid var(--divider);
 }
 
 .shell {
@@ -59,7 +121,7 @@ button {
 }
 
 header {
-  background: #e7f2ef;
+  background: var(--accent-surface);
   padding-block: 18px;
   display: flex;
   justify-content: space-between;
@@ -69,7 +131,7 @@ header {
 }
 .brand {
   text-decoration: none;
-  color: #16383b;
+  color: var(--brand);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -111,11 +173,11 @@ main {
   flex: 1;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  border: 1px solid #d5e1df;
+  border: 1px solid var(--panel-border);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 7px 25px #254a4510;
-  background: white;
+  box-shadow: 0 7px 25px var(--shadow);
+  background: var(--surface);
   @media (max-width: 900px) {
     grid-template-columns: 1fr;
   }
@@ -127,14 +189,14 @@ main {
   flex-direction: column;
 }
 .panel + .panel {
-  border-left: 1px solid #dce5e3;
+  border-left: 1px solid var(--divider);
   @media (max-width: 900px) {
     border-left: 0;
-    border-top: 1px solid #dce5e3;
+    border-top: 1px solid var(--divider);
   }
 }
 .hex {
-  background: #f7faf9;
+  background: var(--hex-surface);
 }
 .panel-head {
   padding: 8px 0;
@@ -155,7 +217,7 @@ h2 {
 }
 .subtitle {
   font-size: 11px;
-  color: #829390;
+  color: var(--subtitle);
 }
 
 textarea,
@@ -180,27 +242,27 @@ textarea,
 textarea,
 .byte-text-editor {
   width: 100%;
-  color: #344f53;
+  color: var(--editor-text);
   outline: none;
   &:focus {
-    border-color: #70b5a5;
+    border-color: var(--editor-focus);
     border-radius: 5px;
-    background: #fff;
-    box-shadow: 0 0 0 3px #1683720b;
+    background: var(--editor-surface);
+    box-shadow: 0 0 0 3px var(--editor-glow);
   }
   &.invalid {
     border-radius: 5px;
-    border-color: #cf765c;
+    border-color: var(--invalid-border);
   }
 }
 textarea::placeholder {
-  color: #b2c0bd;
+  color: var(--placeholder);
 }
 textarea::selection,
 .byte-text-editor ::selection,
 .byte-text-editor::selection {
-  background: #a2dbcc;
-  color: #163b35;
+  background: var(--selection);
+  color: var(--selection-text);
 }
 
 .editor,
@@ -226,7 +288,7 @@ textarea::selection,
 }
 .selection-mirror mark {
   color: transparent;
-  background: #d7dadd;
+  background: var(--selection-inactive);
   border-radius: 2px;
 }
 
@@ -235,22 +297,22 @@ textarea::selection,
 }
 .byte-text-editor[data-empty="true"]:not(:focus)::before {
   content: attr(data-placeholder);
-  color: #b2c0bd;
+  color: var(--placeholder);
   pointer-events: none;
 }
 .byte-text-editor mark,
 .byte-marker.selected {
-  background: #d7dadd;
+  background: var(--selection-inactive);
   color: inherit;
 }
 .byte-marker {
   display: inline-block;
   padding: 0 0.3em;
-  border: 1px solid #879e9b;
+  border: 1px solid var(--marker-border);
   border-radius: 0.25em;
   line-height: 1.2;
-  color: #2a5450;
-  background: #eef5f3;
+  color: var(--marker-text);
+  background: var(--marker-surface);
   white-space: nowrap;
 }
 
@@ -261,8 +323,8 @@ textarea::selection,
   color: inherit;
 }
 .byte-marker.active-selection {
-  background: #a2dbcc;
-  color: #163b35;
+  background: var(--selection);
+  color: var(--selection-text);
 }
 
 .panel-foot {
@@ -271,7 +333,7 @@ textarea::selection,
   display: flex;
   justify-content: space-between;
   font-size: 10px;
-  color: #546e68;
+  color: var(--foot-text);
 }
 .panel-foot.has-error > :not(.panel-error) {
   visibility: hidden;
@@ -283,13 +345,13 @@ textarea::selection,
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  color: #a0442d;
+  color: var(--error);
 }
 
 footer {
   padding: 8px 0;
   text-align: center;
-  color: #97aaa4;
+  color: var(--footer);
   font-size: 10px;
   letter-spacing: 2px;
 }

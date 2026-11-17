@@ -12,7 +12,7 @@
         文字化けアシスト
       </a>
       <div class="toolbar">
-        <button>レイアウト</button>
+        <button type="button" aria-haspopup="dialog" @click="layoutSettings?.open()">レイアウト</button>
       </div>
     </header>
     <div class="actions">
@@ -50,9 +50,12 @@
       <span>Mojibake Assist</span>
     </footer>
   </div>
+  <LayoutSettings ref="layoutSettings" />
 </template>
 
 <script setup lang="ts">
+import { ref } from "vue";
+import LayoutSettings from "./LayoutSettings.vue";
 import PanelShiftJis from "./PanelShiftJis.vue";
 import PanelBinary from "./PanelBinary.vue";
 import PanelUtf8 from "./PanelUtf8.vue";
@@ -60,6 +63,8 @@ import { display, encode, parseHex, type Range, type ViewType } from "../codec";
 import { editorSelection } from "../editorDom";
 import { byteClipboardType } from "../byteEditor";
 import { createPanelStore } from "../store";
+
+const layoutSettings = ref<{ open: () => void } | null>(null);
 
 const {
   shiftJis,
